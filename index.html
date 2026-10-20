@@ -95,11 +95,12 @@ display: flex; align-items: center; justify-content: center;
 <div id="map"></div>
 
 <script>
-// 최대 확대 레벨을 19로 제한하여 고해상도 영역까지만 확대되도록 설정
 var map = L.map('map', {zoomControl: false, maxZoom: 19, minZoom: 15}).setView([36.8522, 126.8610], 18);
 
+// maxNativeZoom: 18 설정을 통해 없는 타일 요청으로 인한 에러 및 회색 화면 방지
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
 maxZoom: 19,
+maxNativeZoom: 18,
 subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
 }).addTo(map);
 
@@ -192,50 +193,4 @@ statusDiv.innerHTML = "GPS 수신 중 (오차: " + Math.round(p.coords.accuracy)
 if (window.activeTarget) drawNavLine(currentPos, window.activeTarget);
 },
 e => { statusDiv.innerHTML = "GPS 오류: " + e.message; },
-{ enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-);
-}
-
-function parseY1Location(query) {
-var match = query.match(/^Y(10|11)(\d{2})$/);
-if (!match) return null;
-var sideType = match[1];
-var num = parseInt(match[2], 10);
-if (num < 1 || num > 55) return null;
-var southLat = 36.8490;
-var northLat = 36.8507;
-var ratio = (num - 1) / 54;
-var targetLat = southLat + (northLat - southLat) * ratio;
-var targetLng = (sideType === "10") ? 126.85867 : 126.85863;
-return [targetLat, targetLng];
-}
-
-function searchLocation() {
-var query = document.getElementById('search-input').value.trim().toUpperCase();
-var targetCoord = parseY1Location(query);
-if (!targetCoord) {
-alert("올바르지 않은 형식입니다: " + query + "\n(입력 예시: Y1001~Y1055, Y1101~Y1155)");
-return;
-}
-window.activeTarget = targetCoord;
-if (targetMarker) map.removeLayer(targetMarker);
-targetMarker = L.marker(targetCoord).addTo(map).bindPopup("<b>목적지: " + query + "</b>").openPopup();
-map.setView(targetCoord, 19);
-if (currentPos) drawNavLine(currentPos, targetCoord);
-}
-
-function drawNavLine(start, end) {
-if (navLine) map.removeLayer(navLine);
-navLine = L.polyline([start, end], {color: '#22c55e', weight: 5, opacity: 0.9, smoothFactor: 1}).addTo(map);
-}
-
-function getCenterCoord() {
-var center = map.getCenter();
-var lat = center.lat.toFixed(6);
-var lng = center.lng.toFixed(6);
-alert("중앙 좌표\n위도: " + lat + "\n경도: " + lng);
-console.log("[" + lat + ", " + lng + "]");
-}
-</script>
-</body>
-</html>
+{ enableHighAccuracy: true,
