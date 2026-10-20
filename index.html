@@ -206,6 +206,7 @@ function drawNavLine(start, end) {
 if (navLine) map.removeLayer(navLine);
 navLine = L.polyline([start, end], {color: '#22c55e', weight: 5, opacity: 0.9, smoothFactor: 1}).addTo(map);
 }
+
 // 지도를 클릭하면 해당 위치의 위도, 경도를 팝업창으로 바로 보여주는 기능
 map.on('click', function(e) {
 var lat = e.latlng.lat.toFixed(6);
