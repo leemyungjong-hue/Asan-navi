@@ -95,12 +95,11 @@ display: flex; align-items: center; justify-content: center;
 <div id="map"></div>
 
 <script>
-var map = L.map('map', {zoomControl: false}).setView([36.8522, 126.8610], 18);
+// 최대 확대 레벨을 19로 제한하여 고해상도 영역까지만 확대되도록 설정
+var map = L.map('map', {zoomControl: false, maxZoom: 19, minZoom: 15}).setView([36.8522, 126.8610], 18);
 
-// 고해상도 위성 지도 타일 적용 (maxNativeZoom 설정으로 깨짐 방지)
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-maxZoom: 21,
-maxNativeZoom: 19,
+maxZoom: 19,
 subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
 }).addTo(map);
 
