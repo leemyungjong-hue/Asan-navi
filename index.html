@@ -52,6 +52,22 @@ text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.9), 0 4px 8px rgba(
 text-align: center; letter-spacing: 1px;
 }
 
+/* 화면 정중앙 십자가 조준점 */
+#crosshair {
+position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
+margin-left: -10px; margin-top: -10px; z-index: 999; pointer-events: none;
+display: flex; align-items: center; justify-content: center;
+font-size: 22px; color: #ef4444; font-weight: bold; text-shadow: 0 0 4px #000;
+}
+
+/* 좌표 추출 버튼 (중앙 하단) */
+#coord-btn {
+position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1000;
+background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+padding: 10px 20px; border-radius: 25px; font-weight: 700; font-size: 13px;
+box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6); cursor: pointer; white-space: nowrap;
+}
+
 #btn {
 position: absolute; bottom: 24px; right: 16px; z-index: 1000;
 width: 56px; height: 56px; background: linear-gradient(135deg, #f97316, #c2410c);
@@ -63,6 +79,11 @@ display: flex; align-items: center; justify-content: center;
 </head>
 <body>
 <div id="title">아산출고 치장장 MAP</div>
+
+<!-- 화면 중앙 조준점 -->
+<div id="crosshair">✚</div>
+<!-- 중앙 좌표 따기 버튼 -->
+<button id="coord-btn" onclick="getCenterCoord()">🎯 현재 화면 중앙 좌표 따기</button>
 
 <div id="search-box">
 <input type="text" id="search-input" placeholder="검색 예: Y1001, Y1101">
@@ -116,8 +137,7 @@ var zoneStyles = {
 var zones = [
 {name:"PA", coords:[[36.8525,126.85911],[36.8525,126.8603],[36.8521,126.8603],[36.8519,126.8602],[36.8517,126.8600],[36.8517,126.85911]], label:[36.8522,126.8596]},
 {name:"P", coords:[[36.8525,126.8604],[36.8525,126.8613],[36.8520,126.8613],[36.8520,126.8604]], label:[36.8522,126.8607]},
-{name:"Y", coords:[
-[36.8505, 126.8576],[36.85085, 126.85820],[36.85085, 126.85870],[36.84890, 126.85870],[36.8499, 126.8576]], label:[36.8502, 126.8580]},
+{name:"Y", coords:[[36.8505, 126.8576],[36.85085, 126.85820],[36.85085, 126.85870],[36.84890, 126.85870],[36.8499, 126.8576]], label:[36.8502, 126.8580]},
 {name:"C", coords:[[36.85085,126.85875],[36.85085,126.8599],[36.84867,126.8599],[36.84867,126.85875]], label:[36.8502,126.8592]},
 {name:"B", coords:[[36.85085,126.8600],[36.85085,126.86112],[36.84867,126.86112],[36.84867,126.8600]], label:[36.8502,126.8605]},
 {name:"A", coords:[[36.85085,126.86122],[36.85085,126.86238],[36.84867,126.86238],[36.84867,126.86122]], label:[36.8502,126.8617]},
@@ -207,13 +227,14 @@ if (navLine) map.removeLayer(navLine);
 navLine = L.polyline([start, end], {color: '#22c55e', weight: 5, opacity: 0.9, smoothFactor: 1}).addTo(map);
 }
 
-// 지도를 클릭하면 해당 위치의 위도, 경도를 팝업창으로 바로 보여주는 기능
-map.on('click', function(e) {
-var lat = e.latlng.lat.toFixed(6);
-var lng = e.latlng.lng.toFixed(6);
-alert("위도: " + lat + ", 경도: " + lng);
+// 화면 중앙의 위도/경도를 가져와서 팝업으로 띄우는 함수
+function getCenterCoord() {
+var center = map.getCenter();
+var lat = center.lat.toFixed(6);
+var lng = center.lng.toFixed(6);
+alert("중앙 좌표\n위도: " + lat + "\n경도: " + lng);
 console.log("[" + lat + ", " + lng + "]");
-});
+}
 </script>
 </body>
 </html>
