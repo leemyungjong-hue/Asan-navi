@@ -96,8 +96,11 @@ display: flex; align-items: center; justify-content: center;
 
 <script>
 var map = L.map('map', {zoomControl: false}).setView([36.8522, 126.8610], 18);
+
+// 고해상도 위성 지도 타일 적용 (maxNativeZoom 설정으로 깨짐 방지)
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
 maxZoom: 21,
+maxNativeZoom: 19,
 subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
 }).addTo(map);
 
@@ -227,7 +230,6 @@ if (navLine) map.removeLayer(navLine);
 navLine = L.polyline([start, end], {color: '#22c55e', weight: 5, opacity: 0.9, smoothFactor: 1}).addTo(map);
 }
 
-// 화면 중앙의 위도/경도를 가져와서 팝업으로 띄우는 함수
 function getCenterCoord() {
 var center = map.getCenter();
 var lat = center.lat.toFixed(6);
