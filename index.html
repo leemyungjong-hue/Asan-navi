@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+• { box-sizing: border-box; }
+html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#222; }
+#map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.leaflet-control-zoom { display: none !important; }
+
+#title { position:absolute; top:10px; width:100%; text-align:center; z-index:1000; font-size:20px; font-weight:bold; color:white; text-shadow:2px 2px 4px black; pointer-events:none; }
+
+/* 검색창 UI 스타일 */
+#search-box { position:absolute; top:45px; left:10px; right:10px; z-index:1000; background:rgba(255,255,255,0.95); padding:8px; border-radius:8px; display:flex; box-shadow:0 2px 6px rgba(0,0,0,0.4); }
+#search-input { flex:1; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:4px; outline:none; text-transform: uppercase; }
+#search-btn { margin-left:6px; padding:8px 14px; background:#2196F3; color:white; border:none; border-radius:4px; font-weight:bold; font-size:14px; cursor:pointer; }
+
+#status { position:absolute; bottom:20px; left:10px; z-index:1000; background:rgba(255,255,255,0.9); padding:8px; border-radius:5px; font-size:12px; border:1px solid #333; max-width: 70%; word-break: break-all; }
+.zone-label { color:yellow; font-weight:bold; font-size:16px; text-shadow:1px 1px 2px black; }
+#btn { position:absolute; bottom:30px; right:20px; z-index:1000; width:65px; height:65px; background:#FF5722; border-radius:50%; color:white; font-size:30px; border:none; box-shadow:0 0 15px rgba(0,0,0,0.6); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+<div id="title">아산출고 치장장 MAP</div>
+
+<!-- 검색창 -->
+<div id="search-box">
+<input type="text" id="search-input" placeholder="검색 예: Y1001, Y1055, Y1101, Y1155">
+<button id="search-btn" onclick="searchLocation()">검색</button>
+</div>
+
+<div id="status">GPS 연결 대기 중...</div>
+<button id="btn" onclick="if(currentPos) map.setView(currentPos, 19);">📍</button>
+<div id="map"></div>
+
+<script>
+var map = L.map('map', {zoomControl: false}).setView([36.8522, 126.8610], 18);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+maxZoom: 21,
+subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+}).addTo(map);
+
+var marker = L.circleMarker([0,0], {radius:8, fillColor:'#00FF00', fillOpacity:1, color:'#fff', weight:2});
+var targetMarker = null;
+var navLine = null;
+var statusDiv = document.getElementById('status');
+var currentPos = null;
+
+var zones = [
+{name:"PA", coords:[[36.8525,126.8590],[36.8525,126.8602],[36.8519,126.8602],[36.8517,126.8600],[36.8517,126.8590]], label:[36.8522,126.8596]},
+{name:"P", coords:[[36.8525,126.8603],[36.8525,126.8613],[36.8519,126.8613],[36.8519,126.8603]], label:[36.8522,126.8607]},
+{name:"Y", coords:[[36.8505,126.8575],[36.8508,126.8587],[36.8489,126.8587],[36.8498,126.8575]], label:[36.8502,126.8580]},
+{name:"C", coords:[[36.8508,126.8587],[36.8508,126.8598],[36.8487,126.8598],[36.8487,126.8587]], label:[36.8502,126.8592]},
+{name:"B", coords:[[36.8508,126.8599],[36.8508,126.8611],[36.8486,126.8611],[36.8486,126.8599]], label:[36.8502,126.8605]},
+{name:"A", coords:[[36.8508,126.8611],[36.8508,126.8624],[36.8486,126.8624],[36.8486,126.8611]], label:[36.8502,126.8617]},
+{name:"수출", coords:[[36.8486,126.8585],[36.8486,126.8635],[36.8463,126.8635],[36.8463,126.8585]], label:[36.8477,126.8612]},
+{name:"배송동", coords:[[36.8508,126.8624],[36.8508,126.8635],[36.8486,126.8635],[36.8486,126.8624]], label:[36.8502,126.8629]},
+{name:"R", coords:[[36.8500,126.8638],[36.8500,126.8659],[36.8486,126.8659],[36.8486,126.8644],[36.8488,126.8638]], label:[36.8493,126.8649]},
+{name:"RA", coords:[[36.8500,126.8638],[36.8507,126.8638],[36.8507,126.8659],[36.8500,126.8659]], label:[36.8504,126.8648]},
+{name:"KA", coords:[[36.8484,126.8638],[36.8486,126.8644],[36.8486,126.8659],[36.8478,126.8659],[36.8478,126.8638]], label:[36.8482,126.8648]},
+{name:"K", coords:[[36.8478,126.8638],[36.8478,126.8659],[36.8463,126.8659],[36.8463,126.8642],[36.8467,126.8638]], label:[36.8471,126.8649]},
+{name:"JA", coords:[[36.8486,126.8660],[36.8500,126.8660],[36.8500,126.8678],[36.8486,126.8678]], label:[36.8504,126.8668]},
+{name:"J", coords:[[36.8500,126.8660],[36.8508,126.8660],[36.8508,126.8678],[36.8500,126.8678]], label:[36.8493,126.8669]},
+{name:"IA", coords:[[36.8478,126.8660],[36.8485,126.8660],[36.8485,126.8678],[36.8478,126.8678]], label:[36.8482,126.8668]},
+{name:"I", coords:[[36.8478,126.8660],[36.8478,126.8679],[36.8463,126.8679],[36.8463,126.8660]], label:[36.8471,126.8669]},
+{name:"H", coords:[[36.8478,126.8681],[36.8478,126.8693],[36.8463,126.8693],[36.8463,126.8681]], label:[36.8472,126.8687]},
+{name:"HA", coords:[[36.8478,126.8681],[36.8485,126.8681],[36.8485,126.8693],[36.8478,126.8693]], label:[36.8482,126.8688]},
+{name:"HB", coords:[[36.8486,126.8680],[36.8500,126.8680],[36.8500,126.8693],[36.8486,126.8693]], label:[36.8493,126.8688]},
+{name:"N", coords:[[36.8459,126.8651],[36.8459,126.8672],[36.8445,126.8672],[36.8445,126.8668]], label:[36.8453,126.8666]},
+{name:"M", coords:[[36.8459,126.8672],[36.8459,126.8687],[36.8445,126.8687],[36.8445,126.8672]], label:[36.8453,126.8681]},
+{name:"L", coords:[[36.8459,126.8687],[36.8459,126.8702],[36.8442,126.8702],[36.8442,126.8692],[36.8445,126.8692],[36.8445,126.8687]], label:[36.8453,126.8695]}
+];
+
+zones.forEach(z => {
+try {
+L.polygon(z.coords, {color:'yellow', weight:2}).addTo(map);
+L.marker(z.label, {icon:L.divIcon({className:'zone-label', html:z.name})}).addTo(map);
+} catch(err) {
+console.error("오류:", z.name);
+}
+});
+
+setTimeout(function() { map.invalidateSize(); }, 200);
+
+// GPS 감시 기능 강화 (상세 에러 코드 출력)
+if (navigator.geolocation) {
+navigator.geolocation.watchPosition(
+p => {
+currentPos = [p.coords.latitude, p.coords.longitude];
+marker.setLatLng(currentPos);
+if (!map.hasLayer(marker)) {
+marker.addTo(map);
+}
+statusDiv.innerHTML = "GPS 수신 중 (오차: " + Math.round(p.coords.accuracy) + "m)";
+
+if (window.activeTarget) {
+drawNavLine(currentPos, window.activeTarget);
+}
+},
+e => {
+var errReason = "";
+switch(e.code) {
+case e.PERMISSION_DENIED: errReason = "위치 권한 거부됨"; break;
+case e.POSITION_UNAVAILABLE: errReason = "위치 정보 불가"; break;
+case e.TIMEOUT: errReason = "응답 시간 초과"; break;
+default: errReason = "알 수 없는 오류 (" + e.message + ")"; break;
+}
+statusDiv.innerHTML = "GPS 오류: " + errReason;
+},
+{ enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+);
+} else {
+statusDiv.innerHTML = "이 브라우저는 GPS를 지원하지 않습니다.";
+}
+
+// Y1열 좌표 계산 함수
+function parseY1Location(query) {
+var match = query.match(/^Y(10|11)(\d{2})$/);
+if (!match) return null;
+
+var sideType = match[1]; // "10" (동쪽), "11" (서쪽)
+var num = parseInt(match[2], 10); // 01 ~ 55
+
+if (num < 1 || num > 55) return null;
+
+var southLat = 36.8490;
+var northLat = 36.8507;
+
+var ratio = (num - 1) / 54;
+var targetLat = southLat + (northLat - southLat) * ratio;
+
+var targetLng = (sideType === "10") ? 126.85867 : 126.85863;
+
+return [targetLat, targetLng];
+}
+
+function searchLocation() {
+var query = document.getElementById('search-input').value.trim().toUpperCase();
+var targetCoord = parseY1Location(query);
+
+if (!targetCoord) {
+alert("올바르지 않은 형식입니다: " + query + "\n(입력 예시: Y1001~Y1055, Y1101~Y1155)");
+return;
+}
+
+window.activeTarget = targetCoord;
+
+if (targetMarker) map.removeLayer(targetMarker);
+targetMarker = L.marker(targetCoord).addTo(map).bindPopup("<b>목적지: " + query + "</b>").openPopup();
+map.setView(targetCoord, 19);
+
+if (currentPos) {
+drawNavLine(currentPos, targetCoord);
+} else {
+alert("목적지가 표시되었습니다. GPS가 수신되면 연두색 내비게이션 선이 자동으로 연결됩니다!");
+}
+}
+
+function drawNavLine(start, end) {
+if (navLine) map.removeLayer(navLine);
+navLine = L.polyline([start, end], {color: '#00FF00', weight: 5, opacity: 0.9}).addTo(map);
+}
+</script>
+</body>
+</html>
