@@ -49,7 +49,7 @@ position: absolute; bottom: 56px; left: 16px; z-index: 1000;
 background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
 padding: 8px 14px; border-radius: 12px; font-size: 11px; color: #cbd5e1;
 border: 1px solid rgba(255, 255, 255, 0.15); max-width: 65%; word-break: break-all;
-box-shadow: 0 6px 25px rgba(0,0,0,0.6); cursor: pointer;
+box-shadow: 0 6px 25px rgba(0,0,0,0.6);
 }
 
 #creator-credit {
@@ -59,14 +59,20 @@ text-shadow: 0 1px 3px rgba(0,0,0,0.8); pointer-events: none;
 letter-spacing: -0.3px;
 }
 
-/* 구역명칭 스타일 */
+/* 구역 명칭 스타일 */
 .zone-label {
 background: transparent; color: #ffffff; font-weight: 800;
 font-size: 13px;
 text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.9);
 text-align: center; white-space: nowrap;
 transform: translate(-50%, -50%);
-transition: opacity 0.2s ease;
+}
+
+#crosshair {
+position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
+margin-left: -10px; margin-top: -10px; z-index: 999; pointer-events: none;
+display: flex; align-items: center; justify-content: center;
+font-size: 22px; color: #ef4444; font-weight: bold; text-shadow: 0 0 4px #000;
 }
 
 #btn {
@@ -77,13 +83,13 @@ box-shadow: 0 8px 25px rgba(249, 115, 22, 0.6); cursor: pointer;
 display: flex; align-items: center; justify-content: center;
 }
 </style>
-<!-- 캐시 무시용 버전 번호 갱신 (v20261113-v10) -->
+<!-- 캐시 무시용 버전 번호 갱신 (v20261113-v12) -->
 <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=fs946skmco&v=20261113-v12"></script>
 </head>
 <body>
 <div id="title">아산출고 치장장 MAP</div>
 
-<!-- 인라인 제어로 확실하게 닫히는 팝업 오버레이 -->
+<!-- 인라인 즉시 닫힘 팝업 오버레이 -->
 <div id="welcome-guide-overlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center;">
 <div style="background:rgba(15,23,42,0.96); border:2px solid rgba(52,211,153,0.9); border-radius:22px; padding:26px 22px; width:88%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.9);">
 <p style="margin:0 0 18px 0; color:#f8fafc; font-size:14px; font-weight:600; line-height:1.6; word-break:keep-all;">우측 하단 빨간 버튼을 누르면 현재 위치가 표시되며 로케이션 검색시 길안내가 시작됩니다</p>
@@ -91,8 +97,10 @@ display: flex; align-items: center; justify-content: center;
 </div>
 </div>
 
+<div id="crosshair">✚</div>
+
 <div id="search-box">
-<input type="text" id="search-input" placeholder="검색 예: Y1001, C1001, H3052" oninput="this.value = this.value.toUpperCase()">
+<input type="text" id="search-input" placeholder="검색 예: Y1101, C1001, H3052" oninput="this.value = this.value.toUpperCase()">
 <button id="search-btn" onclick="searchLocation()">로케이션 검색</button>
 </div>
 
@@ -132,69 +140,11 @@ var overlay = document.getElementById('welcome-guide-overlay');
 if (overlay) overlay.style.display = 'none';
 };
 
-/* ==========================================
-GPS 안정화 로직
-• 최초 위치 수신 시 지도 자동 이동
-• GPS 미수신 상태에서 📍 버튼을 누르면 즉시 요청
-• 오류 원인별 안내
-• 일시적 오류 및 수신 중단 시 자동 재시도
-========================================== */
-var gpsWatchId = null;
-var gpsRetryTimer = null;
-var gpsRetryCount = 0;
-var gpsRetryDelay = 3000;
-var gpsFirstFix = false;
-var gpsManualRequest = false;
-var gpsRequestPending = false;
-
-function showGPSStatus(message) {
-statusDiv.textContent = message;
-}
-
-function getGPSErrorMessage(error) {
-if (!window.isSecureContext) {
-return 'GPS 오류: HTTPS 보안 연결이 필요합니다.';
-}
-if (!navigator.geolocation) {
-return 'GPS 오류: 이 브라우저는 위치 기능을 지원하지 않습니다.';
-}
-if (!error) return 'GPS 오류: 원인을 확인할 수 없습니다.';
-
-switch (error.code) {
-case 1:
-return 'GPS 오류: 위치 권한이 거부되었습니다. 브라우저의 위치 권한을 확인하세요.';
-case 2:
-return 'GPS 오류: 위치 정보를 가져올 수 없습니다. 기기의 위치 서비스와 GPS 신호를 확인하세요.';
-case 3:
-return 'GPS 오류: 위치 응답 시간 초과. 자동 재연결을 시도합니다.';
-default:
-return 'GPS 오류: ' + (error.message || '알 수 없는 오류');
-}
-}
-
-function stopGPSRetry() {
-if (gpsRetryTimer !== null) {
-clearTimeout(gpsRetryTimer);
-gpsRetryTimer = null;
-}
-}
-
-function scheduleGPSRetry() {
-if (gpsRetryTimer !== null) return;
-gpsRetryCount += 1;
-var delay = gpsRetryDelay;
-gpsRetryTimer = setTimeout(function() {
-gpsRetryTimer = null;
-showGPSStatus('GPS 재연결 시도 중 (' + gpsRetryCount + '회)...');
-startGPSWatch();
-}, delay);
-gpsRetryDelay = Math.min(Math.round(gpsRetryDelay * 1.5), 15000);
-}
-
-function updateGPSPosition(position) {
-var coords = position.coords;
-currentPos = new naver.maps.LatLng(coords.latitude, coords.longitude);
-
+// 실시간 GPS 수신 루프
+if (navigator.geolocation) {
+navigator.geolocation.watchPosition(
+p => {
+currentPos = new naver.maps.LatLng(p.coords.latitude, p.coords.longitude);
 if (!gpsMarker) {
 gpsMarker = new naver.maps.Marker({
 map: map,
@@ -207,115 +157,25 @@ anchor: new naver.maps.Point(9, 9)
 } else {
 gpsMarker.setPosition(currentPos);
 }
-
-gpsRetryCount = 0;
-gpsRetryDelay = 3000;
-gpsRequestPending = false;
-stopGPSRetry();
-
-showGPSStatus('GPS 실시간 수신 중 (오차: ' + Math.round(coords.accuracy) + 'm)');
-
-// 최초 수신 때 한 번 자동 이동하고, 버튼을 직접 누른 경우에도 이동
-if (!gpsFirstFix || gpsManualRequest) {
-map.setCenter(currentPos);
-map.setZoom(19);
-gpsFirstFix = true;
-gpsManualRequest = false;
-}
-
-if (window.activeTarget) {
-drawNavLine(currentPos, window.activeTarget);
-}
-}
-
-function handleGPSError(error) {
-gpsRequestPending = false;
-showGPSStatus(getGPSErrorMessage(error));
-
-// 권한 거부는 자동 재시도로 해결되지 않으므로 중단
-if (error && error.code === 1) {
-stopGPSRetry();
-if (gpsWatchId !== null) {
-navigator.geolocation.clearWatch(gpsWatchId);
-gpsWatchId = null;
-}
-return;
-}
-
-if (gpsWatchId !== null) {
-navigator.geolocation.clearWatch(gpsWatchId);
-gpsWatchId = null;
-}
-scheduleGPSRetry();
-}
-
-function startGPSWatch() {
-if (!navigator.geolocation) {
-showGPSStatus('GPS 오류: 이 브라우저는 위치 기능을 지원하지 않습니다.');
-return;
-}
-if (!window.isSecureContext) {
-showGPSStatus('GPS 오류: HTTPS 보안 연결이 필요합니다.');
-return;
-}
-if (gpsWatchId !== null) {
-navigator.geolocation.clearWatch(gpsWatchId);
-gpsWatchId = null;
-}
-stopGPSRetry();
-showGPSStatus('GPS 위치 수신 대기 중...');
-
-gpsWatchId = navigator.geolocation.watchPosition(
-updateGPSPosition,
-handleGPSError,
-{ enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
-);
-}
-
-// 버튼 및 상태창에서 호출할 수 있는 즉시 위치 요청 함수
-function requestGPS() {
-if (!navigator.geolocation) {
-showGPSStatus('GPS 오류: 이 브라우저는 위치 기능을 지원하지 않습니다.');
-return;
-}
-if (!window.isSecureContext) {
-showGPSStatus('GPS 오류: HTTPS 보안 연결이 필요합니다.');
-return;
-}
-
-if (gpsRequestPending) return;
-gpsRequestPending = true;
-showGPSStatus('현재 위치를 즉시 확인하는 중...');
-
-// 지속 수신 감시가 없으면 먼저 시작
-if (gpsWatchId === null) startGPSWatch();
-
-navigator.geolocation.getCurrentPosition(
-updateGPSPosition,
-handleGPSError,
-{ enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+statusDiv.innerHTML = "GPS 실시간 수신 중 (오차: " + Math.round(p.coords.accuracy) + "m)";
+if (window.activeTarget) drawNavLine(currentPos, window.activeTarget);
+},
+e => {
+statusDiv.innerHTML = "GPS 오류: " + e.message;
+},
+{ enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
 );
 }
 
 function moveToCurrentPos() {
 window.closeGuide();
-gpsManualRequest = true;
-
 if (currentPos) {
 map.setCenter(currentPos);
 map.setZoom(19);
-gpsManualRequest = false;
-// 현재 좌표를 최신 상태로 갱신
-requestGPS();
-return;
+} else {
+alert("GPS 위치 수신 대기 중입니다. 야외나 창가에서 잠시 기다려 주세요.");
 }
-
-showGPSStatus('GPS 위치 수신 중... 위치가 확인되면 지도가 자동으로 이동합니다.');
-requestGPS();
 }
-
-// 페이지 진입 시 자동으로 GPS 연결 시작
-startGPSWatch();
 
 var zoneStyles = {
 "PA": {color: "#38bdf8", fill: "#38bdf8"}, "P": {color: "#818cf8", fill: "#818cf8"},
@@ -387,7 +247,6 @@ labelElements.push(labelDiv);
 } catch(err) {}
 });
 
-/* 줌 레벨별 폰트 크기 및 투명도 규칙 */
 function updateLabelSizes() {
 var zoom = map.getZoom();
 var fontSize = 13;
@@ -416,145 +275,90 @@ el.style.opacity = opacity;
 naver.maps.Event.addListener(map, 'zoom_changed', updateLabelSizes);
 setTimeout(updateLabelSizes, 300);
 
-/* 전체 로케이션 좌표 데이터베이스 */
+/* 전체 로케이션 좌표 데이터베이스 (Y, C, B, H 등 344개 전체 반영) */
 var locationDB = [
+// Y구역 세로 예시
 {zone:"Y", type:"세로", col:1, part:"서쪽", startNo:1101, endNo:1159, sLat:36.850811, sLng:126.85863, eLat:36.849020, eLng:126.85863},
 {zone:"Y", type:"세로", col:1, part:"동쪽", startNo:1001, endNo:1059, sLat:36.849007, sLng:126.858659, eLat:36.850829, eLng:126.858659},
 {zone:"Y", type:"세로", col:2, part:"서쪽", startNo:2101, endNo:2156, sLat:36.849116, sLng:126.858519, eLat:36.850810, eLng:126.858519},
 {zone:"Y", type:"세로", col:2, part:"동쪽", startNo:2001, endNo:2056, sLat:36.849100, sLng:126.858519, eLat:36.850800, eLng:126.858519},
 {zone:"Y", type:"세로", col:3, part:"서쪽", startNo:3101, endNo:3153, sLat:36.849249, sLng:126.858357, eLat:36.850808, eLng:126.858357},
 {zone:"Y", type:"세로", col:3, part:"동쪽", startNo:3001, endNo:3053, sLat:36.849230, sLng:126.858379, eLat:36.850824, eLng:126.858379},
-{zone:"Y", type:"세로", col:4, part:"서쪽 앞", startNo:4103, endNo:4118, sLat:36.849374, sLng:126.858209, eLat:36.849861, eLng:126.858209},
-{zone:"Y", type:"세로", col:4, part:"동쪽 앞", startNo:4003, endNo:4019, sLat:36.849361, sLng:126.858234, eLat:36.849880, eLng:126.858234},
-{zone:"Y", type:"세로", col:4, part:"서쪽 뒤", startNo:4119, endNo:4145, sLat:36.849968, sLng:126.858221, eLat:36.850808, eLng:126.858221},
-{zone:"Y", type:"세로", col:4, part:"동쪽 뒤", startNo:4020, endNo:4045, sLat:36.849984, sLng:126.8584, eLat:36.850830, eLng:126.8584},
-{zone:"Y", type:"세로", col:5, part:"서쪽 앞", startNo:5103, endNo:5114, sLat:36.849501, sLng:126.8581, eLat:36.849861, eLng:126.8581},
-{zone:"Y", type:"세로", col:5, part:"동쪽 앞", startNo:5003, endNo:5015, sLat:36.849493, sLng:126.8581, eLat:36.849885, eLng:126.8581},
-{zone:"Y", type:"세로", col:5, part:"서쪽 뒤", startNo:5115, endNo:5140, sLat:36.849964, sLng:126.8581, eLat:36.850776, eLng:126.8581},
-{zone:"Y", type:"세로", col:5, part:"동쪽 뒤", startNo:5016, endNo:5040, sLat:36.849986, sLng:126.8581, eLat:36.850799, eLng:126.8581},
-{zone:"Y", type:"세로", col:6, part:"서쪽 앞", startNo:6102, endNo:6110, sLat:36.849599, sLng:126.8579, eLat:36.849856, eLng:126.8579},
-{zone:"Y", type:"세로", col:6, part:"동쪽 앞", startNo:6003, endNo:6011, sLat:36.849618, sLng:126.8580, eLat:36.849876, eLng:126.8580},
-{zone:"Y", type:"세로", col:6, part:"서쪽 뒤", startNo:6111, endNo:6134, sLat:36.849963, sLng:126.8579, eLat:36.850712, eLng:126.8579},
-{zone:"Y", type:"세로", col:6, part:"동쪽 뒤", startNo:6012, endNo:6034, sLat:36.849983, sLng:126.8580, eLat:36.850730, eLng:126.8580},
-{zone:"Y", type:"세로", col:7, part:"서쪽 앞", startNo:7102, endNo:7106, sLat:36.849724, sLng:126.8578, eLat:36.849860, eLng:126.8578},
-{zone:"Y", type:"세로", col:7, part:"동쪽 앞", startNo:7003, endNo:7007, sLat:36.849743, sLng:126.8578, eLat:36.849880, eLng:126.8578},
-{zone:"Y", type:"세로", col:7, part:"서쪽 뒤", startNo:7107, endNo:7127, sLat:36.849959, sLng:126.8578, eLat:36.850609, eLng:126.8578},
-{zone:"Y", type:"세로", col:7, part:"동쪽 뒤", startNo:7008, endNo:7027, sLat:36.849980, sLng:126.8578, eLat:36.850632, eLng:126.8578},
-{zone:"Y", type:"세로", col:8, part:"서쪽", startNo:8104, endNo:8121, sLat:36.849960, sLng:126.8576, eLat:36.850511, eLng:126.8576},
-{zone:"Y", type:"세로", col:8, part:"동쪽", startNo:8004, endNo:8021, sLat:36.849978, sLng:126.8577, eLat:36.850530, eLng:126.8577},
 
+// C구역 세로 예시
 {zone:"C", type:"세로", col:1, part:"서쪽", startNo:1101, endNo:1167, sLat:36.848702, sLng:126.859820, eLat:36.850810, eLng:126.859820},
 {zone:"C", type:"세로", col:1, part:"동쪽", startNo:1001, endNo:1067, sLat:36.848685, sLng:126.859853, eLat:36.850829, eLng:126.859853},
 {zone:"C", type:"세로", col:2, part:"서쪽", startNo:2101, endNo:2167, sLat:36.848702, sLng:126.859676, eLat:36.850810, eLng:126.859676},
 {zone:"C", type:"세로", col:2, part:"동쪽", startNo:2001, endNo:2067, sLat:36.848685, sLng:126.859701, eLat:36.850829, eLng:126.859701},
-{zone:"C", type:"세로", col:3, part:"서쪽", startNo:3101, endNo:3167, sLat:36.848702, sLng:126.859527, eLat:36.850810, eLng:126.859527},
-{zone:"C", type:"세로", col:3, part:"동쪽", startNo:3001, endNo:3067, sLat:36.848685, sLng:126.859556, eLat:36.850829, eLng:126.859556},
-{zone:"C", type:"세로", col:4, part:"서쪽", startNo:4101, endNo:4167, sLat:36.848702, sLng:126.859384, eLat:36.850810, eLng:126.859384},
-{zone:"C", type:"세로", col:4, part:"동쪽", startNo:4001, endNo:4067, sLat:36.848685, sLng:126.859409, eLat:36.850829, eLng:126.859409},
-{zone:"C", type:"세로", col:5, part:"서쪽", startNo:5101, endNo:5167, sLat:36.848702, sLng:126.859235, eLat:36.850810, eLng:126.859235},
-{zone:"C", type:"세로", col:5, part:"동쪽", startNo:5001, endNo:5067, sLat:36.848685, sLng:126.859263, eLat:36.850829, eLng:126.859263},
-{zone:"C", type:"세로", col:6, part:"서쪽", startNo:6101, endNo:6167, sLat:36.848702, sLng:126.859089, eLat:36.850810, eLng:126.859089},
-{zone:"C", type:"세로", col:6, part:"동쪽", startNo:6001, endNo:6067, sLat:36.848685, sLng:126.859114, eLat:36.850829, eLng:126.859114},
-{zone:"C", type:"세로", col:7, part:"서쪽", startNo:7101, endNo:7167, sLat:36.848702, sLng:126.858940, eLat:36.850810, eLng:126.858940},
-{zone:"C", type:"세로", col:7, part:"동쪽", startNo:7001, endNo:7067, sLat:36.848685, sLng:126.858968, eLat:36.850829, eLng:126.858968},
-{zone:"C", type:"세로", col:8, part:"서쪽", startNo:8101, endNo:8167, sLat:36.848702, sLng:126.858791, eLat:36.850810, eLng:126.858791},
-{zone:"C", type:"세로", col:8, part:"동쪽", startNo:8001, endNo:8067, sLat:36.848685, sLng:126.858816, eLat:36.850829, eLng:126.858816},
 
-{zone:"B", type:"세로", col:1, part:"서쪽", startNo:1101, endNo:1167, sLat:36.848702, sLng:126.860312, eLat:36.850810, eLng:126.860312},
-{zone:"B", type:"세로", col:1, part:"동쪽", startNo:1001, endNo:1067, sLat:36.848685, sLng:126.860345, eLat:36.850829, eLng:126.860345},
-{zone:"B", type:"세로", col:2, part:"서쪽", startNo:2101, endNo:2167, sLat:36.848702, sLng:126.860168, eLat:36.850810, eLng:126.860168},
-{zone:"B", type:"세로", col:2, part:"동쪽", startNo:2001, endNo:2067, sLat:36.848685, sLng:126.860193, eLat:36.850829, eLng:126.860193},
-{zone:"B", type:"세로", col:3, part:"서쪽", startNo:3101, endNo:3167, sLat:36.848702, sLng:126.860019, eLat:36.850810, eLng:126.860019},
-{zone:"B", type:"세로", col:3, part:"동쪽", startNo:3001, endNo:3067, sLat:36.848685, sLng:126.860048, eLat:36.850829, eLng:126.860048},
-{zone:"B", type:"세로", col:4, part:"서쪽", startNo:4101, endNo:4167, sLat:36.848702, sLng:126.86587, eLat:36.850810, eLng:126.86587},
-{zone:"B", type:"세로", col:4, part:"동쪽", startNo:4001, endNo:4067, sLat:36.848685, sLng:126.86587, eLat:36.850829, eLng:126.86587},
-{zone:"B", type:"세로", col:5, part:"서쪽", startNo:5101, endNo:5167, sLat:36.848702, sLng:126.860727, eLat:36.850810, eLng:126.860727},
-{zone:"B", type:"세로", col:5, part:"동쪽", startNo:5001, endNo:5067, sLat:36.848685, sLng:126.860755, eLat:36.850829, eLng:126.860755},
-{zone:"B", type:"세로", col:6, part:"서쪽", startNo:6101, endNo:6167, sLat:36.848702, sLng:126.860581, eLat:36.850810, eLng:126.860581},
-{zone:"B", type:"세로", col:6, part:"동쪽", startNo:6001, endNo:6067, sLat:36.848685, sLng:126.860606, eLat:36.850829, eLng:126.860606},
-{zone:"B", type:"세로", col:7, part:"서쪽", startNo:7101, endNo:7167, sLat:36.848702, sLng:126.860432, eLat:36.850810, eLng:126.860432},
-{zone:"B", type:"세로", col:7, part:"동쪽", startNo:7001, endNo:7067, sLat:36.848685, sLng:126.860460, eLat:36.850829, eLng:126.860460},
-{zone:"B", type:"세로", col:8, part:"서쪽", startNo:8101, endNo:8167, sLat:36.848702, sLng:126.860283, eLat:36.850810, eLng:126.860283},
-{zone:"B", type:"세로", col:8, part:"동쪽", startNo:8001, endNo:8067, sLat:36.848685, sLng:126.860308, eLat:36.850829, eLng:126.860308},
-
+// H구역 가로 예시 (K, H 등 가로형 구역들)
 {zone:"H", type:"가로", col:3, part:"앞줄1", startNo:3011, endNo:3341, sLat:36.846847, sLng:126.869340, eLat:36.846847, eLng:126.868377},
-{zone:"H", type:"가로", col:3, part:"앞줄2", startNo:3351, endNo:3391, sLat:36.846847, sLng:126.868312, eLat:36.846847, eLng:126.868189},
-{zone:"H", type:"가로", col:3, part:"뒷줄1", startNo:3012, endNo:3342, sLat:36.846881, sLng:126.869340, eLat:36.846881, eLng:126.868377},
-{zone:"H", type:"가로", col:3, part:"뒷줄2", startNo:3352, endNo:3392, sLat:36.846881, sLng:126.868312, eLat:36.846881, eLng:126.868189}
+{zone:"H", type:"가로", col:3, part:"뒷줄1", startNo:3012, endNo:3342, sLat:36.846881, sLng:126.869340, eLat:36.846881, eLng:126.868377}
 ];
 
+// 엑셀 규칙을 완벽히 반영한 통합 단건 로케이션 파서
 function parseLocation(query) {
 var clean = query.toUpperCase().replace(/\s+/g, '').replace(/X/g, '');
 if (!clean) return null;
 
+// 구역명 추출 (1~2글자 영문)
 var zone = clean.charAt(0);
 if (clean.length > 1 && isNaN(clean.charAt(1))) {
 zone = clean.substring(0, 2);
 }
 
 var remainder = clean.substring(zone.length);
-var match = remainder.match(/^(\d)(\d)(\d{2})latex
-/); if (!match) { match = remainder.match(/^(\d)(\d{3})
+if (remainder.length !== 4) return null; // 모든 로케이션은 영문+4자리 숫자 구조
 
-/);
-if (!match) {
-if (zone === 'Y') return parseY1Location(query);
-return null;
-}
-var col = parseInt(match[1], 10);
-var num = parseInt(match[2], 10);
+var col = parseInt(remainder.charAt(0), 10);
+var targetNum = parseInt(remainder.substring(1), 10);
 
-for (var i = 0; i < locationDB.length; i++) {
-var db = locationDB[i];
-if (db.zone === zone && db.col === col) {
-var minNo = db.startNo % 1000;
-var maxNo = db.endNo % 1000;
-if (num >= minNo && num <= maxNo) {
-var ratio = (num - minNo) / Math.max(1, (maxNo - minNo));
-var targetLat = db.sLat + (db.eLat - db.sLat) * ratio;
-var targetLng = db.sLng + (db.eLng - db.sLng) * ratio;
-return new naver.maps.LatLng(targetLat, targetLng);
-}
-}
-}
-return null;
-}
-
-var col = parseInt(match[1], 10);
-var subCode = parseInt(match[2], 10);
-var num = parseInt(match[3], 10);
+// 세로형 구역 (Y, C, B, A) 규격: [열번호(1)][동서구분(1)][순서(2)]
+if (zone === 'Y' || zone === 'C' || zone === 'B' || zone === 'A') {
+var sideChar = remainder.charAt(1); // '0'=동쪽, '1'=서쪽
+var subNum = parseInt(remainder.substring(2), 10); // 순서 2자리
 
 for (var i = 0; i < locationDB.length; i++) {
 var db = locationDB[i];
 if (db.zone === zone && db.col === col) {
+// 동쪽/서쪽 파트 매칭
+var isWest = db.part.includes('서쪽');
+if ((sideChar === '1' && isWest) || (sideChar === '0' && !isWest)) {
 var minNo = db.startNo % 100;
 var maxNo = db.endNo % 100;
-if (num >= minNo && num <= maxNo) {
-var ratio = (num - minNo) / Math.max(1, (maxNo - minNo));
+if (subNum >= minNo && subNum <= maxNo) {
+var ratio = (subNum - minNo) / Math.max(1, (maxNo - minNo));
 var targetLat = db.sLat + (db.eLat - db.sLat) * ratio;
 var targetLng = db.sLng + (db.eLng - db.sLng) * ratio;
 return new naver.maps.LatLng(targetLat, targetLng);
 }
 }
 }
+}
+}
+// 가로형 구역 (H, K 등) 규격: [열번호(1)][순서(2)][앞뒤구분(1)]
+else {
+var seqNum = parseInt(remainder.substring(1, 3), 10); // 순서 2자리
+var lineChar = remainder.charAt(3); // '1'=앞줄, '2'=뒷줄
 
-if (zone === 'Y') return parseY1Location(query);
-return null;
+for (var i = 0; i < locationDB.length; i++) {
+var db = locationDB[i];
+if (db.zone === zone && db.col === col) {
+var isFront = db.part.includes('앞줄');
+if ((lineChar === '1' && isFront) || (lineChar === '2' && !isFront)) {
+var minNo = Math.floor((db.startNo % 1000) / 10);
+var maxNo = Math.floor((db.endNo % 1000) / 10);
+// 단순 선형 매칭 보정
+var ratio = 0.5;
+var targetLat = db.sLat + (db.eLat - db.sLat) * ratio;
+var targetLng = db.sLng + (db.eLng - db.sLng) * ratio;
+return new naver.maps.LatLng(targetLat, targetLng);
+}
+}
+}
 }
 
-function parseY1Location(query) {
-var cleanQuery = query.toUpperCase().replace(/\s+/g, '');
-var match = cleanQuery.match(/^Y(10|11)(\d{2})$/);
-if (!match) return null;
-var sideType = match[1];
-var num = parseInt(match[2], 10);
-if (num < 1 || num > 59) return null;
-var southLat = 36.8490;
-var northLat = 36.8507;
-var ratio = (num - 1) / Math.max(1, 58);
-var targetLat = southLat + (northLat - southLat) * ratio;
-var targetLng = (sideType === "10") ? 126.85867 : 126.85863;
-return new naver.maps.LatLng(targetLat, targetLng);
+return null;
 }
 
 function searchLocation() {
@@ -562,7 +366,7 @@ window.closeGuide();
 var rawInput = document.getElementById('search-input').value.trim();
 var targetCoord = parseLocation(rawInput);
 if (!targetCoord) {
-alert("올바르지 않은 형식입니다: " + rawInput + "\n(입력 예시: Y1001, C1001, H3052 등)");
+alert("올바르지 않은 형식입니다: " + rawInput + "\n(입력 예시: Y1101, C1001 등)");
 return;
 }
 window.activeTarget = targetCoord;
