@@ -76,13 +76,6 @@ display: flex; align-items: center; justify-content: center;
 font-size: 22px; color: #ef4444; font-weight: bold; text-shadow: 0 0 4px #000;
 }
 
-#coord-btn {
-position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1000;
-background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
-padding: 10px 20px; border-radius: 25px; font-weight: 700; font-size: 13px;
-box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6); cursor: pointer; white-space: nowrap;
-}
-
 #btn {
 position: absolute; bottom: 24px; right: 16px; z-index: 1000;
 width: 56px; height: 56px; background: linear-gradient(135deg, #f97316, #c2410c);
@@ -91,8 +84,8 @@ box-shadow: 0 8px 25px rgba(249, 115, 22, 0.6); cursor: pointer;
 display: flex; align-items: center; justify-content: center;
 }
 </style>
-<!-- 캐시 무시용 버전 번호 갱신 (v20261113-v1) -->
-<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=fs946skmco&v=20261113-v1"></script>
+<!-- 캐시 무시용 버전 번호 -->
+<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=fs946skmco&v=20261113-v2"></script>
 </head>
 <body>
 <div id="title">아산출고 치장장 MAP</div>
@@ -103,6 +96,8 @@ display: flex; align-items: center; justify-content: center;
 <button onclick="closeGuide()" style="background:linear-gradient(135deg, #34d399, #059669); color:#ffffff; border:none; padding:12px 0; width:100%; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 15px rgba(52,211,153,0.5);">확 인</button>
 </div>
 </div>
+
+<div id="crosshair">✚</div>
 
 <div id="search-box">
 <input type="text" id="search-input" placeholder="검색 예: Y1001, C1102, K3011" oninput="this.value = this.value.toUpperCase()">
@@ -189,7 +184,7 @@ var zones = [
 {name:"JA", coords:[[36.85005,126.86602],[36.8509,126.86602],[36.8509,126.8678],[36.85005,126.8678]], label:[36.85047,126.86691]},
 {name:"J", coords:[[36.8500,126.86602],[36.84863,126.86602],[36.84863,126.8678],[36.8500,126.8678]], label:[36.84931,126.86691]},
 {name:"IA", coords:[[36.84785,126.86602],[36.8486,126.86602],[36.8486,126.8679],[36.84785,126.8679]], label:[36.84822,126.86696]},
-{name:"I", coords:[[36.8478,126.86602],[36.8478,126.8679],[36.84644,126.8679],[36.84644,126.867541],[36.846339,126.867541],[36.846993,126.866111],[36.846442,126.866111],[36.84644,126.86602]], label:[36.84712,126.86696]},
+{name:"I", coords:[[36.8478,126.86602],[36.8478,126.8679],[36.84644,126.8679],[36.846442,126.867541],[36.8466326,126.867539],[36.8466326,126.866111],[36.846442,126.866111],[36.84644,126.86602]], label:[36.84712,126.86696]},
 {name:"H", coords:[[36.84785,126.86815],[36.84785,126.86935],[36.8465,126.86935],[36.8465,126.86815]], label:[36.84717,126.86875]},
 {name:"HA", coords:[[36.8479,126.86815],[36.8486,126.86815],[36.8486,126.86935],[36.8479,126.86935]], label:[36.84825,126.86875]},
 {name:"HB", coords:[[36.84863,126.86815],[36.850166,126.86815],[36.850166,126.86935],[36.84863,126.86935]], label:[36.84940,126.86875]},
@@ -282,10 +277,7 @@ e => { statusDiv.innerHTML = "GPS 오류: " + e.message; },
 );
 }
 
-/* 엑셀 전체 로케이션 좌표 DB 매핑 데이터 */
 var locationDB = [
-// [구역, 형태, 열번호, 구분, 총개수, 시작번호, 끝번호, 시작위도, 시작경도, 끝위도, 끝경도]
-// Y 구역 세로
 {zone:"Y", type:"세로", col:1, part:"서쪽", count:59, startNo:1101, endNo:1159, sLat:36.850811, sLng:126.85863, eLat:36.849020, eLng:126.85863},
 {zone:"Y", type:"세로", col:1, part:"동쪽", count:59, startNo:1001, endNo:1059, sLat:36.849007, sLng:126.858659, eLat:36.850829, eLng:126.858659},
 {zone:"Y", type:"세로", col:2, part:"서쪽", count:56, startNo:2101, endNo:2156, sLat:36.849116, sLng:126.858519, eLat:36.850810, eLng:126.858519},
@@ -310,34 +302,29 @@ var locationDB = [
 {zone:"Y", type:"세로", col:7, part:"동쪽 뒤", count:22, startNo:7008, endNo:7027, sLat:36.849980, sLng:126.8578, eLat:36.850632, eLng:126.8578},
 {zone:"Y", type:"세로", col:8, part:"서쪽", count:18, startNo:8104, endNo:8121, sLat:36.849960, sLng:126.8576, eLat:36.850511, eLng:126.8576},
 {zone:"Y", type:"세로", col:8, part:"동쪽", count:18, startNo:8004, endNo:8021, sLat:36.849978, sLng:126.8577, eLat:36.850530, eLng:126.8577}
-// 다른 구역(C, B, A, K, KA, R, RA, I, IA, J, JA, H, HA, HB, P, PA 등)도 동일한 방식으로 전체 데이터 매핑 반영 가능
 ];
 
 function parseLocation(query) {
 var clean = query.toUpperCase().replace(/\s+/g, '').replace(/X/g, '');
-// 예: Y1001, C1102 등 파싱 로직
 var match = clean.match(/^([A-Z]+)(\d)(\d)(\d{2})latex
-/); if (!match) { // 3자리 또는 다른 형식 매칭 시도 match = clean.match(/^([A-Z]+)(\d)(\d{3})
+/); if (!match) { match = clean.match(/^([A-Z]+)(\d)(\d{3})
 
 /);
-if (!match) return null;
+if (!match) return parseY1Location(query);
 var zone = match[1];
 var col = parseInt(match[2], 10);
 var num = parseInt(match[3], 10);
-// 기본 Y구역 호환 처리
 if (zone === 'Y') {
-var sideType = match[2]; // 10 또는 11
-// 기존 parseY1Location 로직 활용
+return parseY1Location(query);
 }
 return null;
 }
 
 var zone = match[1];
 var col = parseInt(match[2], 10);
-var sideCode = parseInt(match[3], 10); // 0: 동쪽(앞), 1: 서쪽(뒤) 등
+var sideCode = parseInt(match[3], 10);
 var num = parseInt(match[4], 10);
 
-// DB에서 일치하는 구간 검색
 for (var i = 0; i < locationDB.length; i++) {
 var db = locationDB[i];
 if (db.zone === zone && db.col === col) {
@@ -349,8 +336,6 @@ return new naver.maps.LatLng(targetLat, targetLng);
 }
 }
 }
-
-// 만약 DB에 직접 매칭 안 되더라도 기존 Y구역 패턴이면 기존 연산식으로 백업 처리
 return parseY1Location(query);
 }
 
