@@ -84,17 +84,17 @@ box-shadow: 0 8px 25px rgba(249, 115, 22, 0.6); cursor: pointer;
 display: flex; align-items: center; justify-content: center;
 }
 </style>
-<!-- 캐시 무시용 버전 번호 갱신 (v20261113-v7) -->
-<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=fs946skmco&v=20261113-v7"></script>
+<!-- 캐시 무시용 버전 번호 갱신 (v20261113-v8) -->
+<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=fs946skmco&v=20261113-v8"></script>
 </head>
 <body>
 <div id="title">아산출고 치장장 MAP</div>
 
-<!-- 삼성 브라우저 호환성 강화 팝업 오버레이 -->
-<div id="welcome-guide-overlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center; -webkit-transform:translateZ(0);">
+<!-- 인라인으로 강제 닫힘을 보장하는 팝업 오버레이 -->
+<div id="welcome-guide-overlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center;">
 <div style="background:rgba(15,23,42,0.96); border:2px solid rgba(52,211,153,0.9); border-radius:22px; padding:26px 22px; width:88%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.9);">
 <p style="margin:0 0 18px 0; color:#f8fafc; font-size:14px; font-weight:600; line-height:1.6; word-break:keep-all;">우측 하단 빨간 버튼을 누르면 현재 위치가 표시되며 로케이션 검색시 길안내가 시작됩니다</p>
-<button type="button" id="guide-ok-btn" style="background:linear-gradient(135deg, #34d399, #059669); color:#ffffff; border:none; padding:12px 0; width:100%; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 15px rgba(52,211,153,0.5); -webkit-tap-highlight-color:transparent;">확 인</button>
+<button type="button" onclick="document.getElementById('welcome-guide-overlay').style.display='none'; return false;" style="background:linear-gradient(135deg, #34d399, #059669); color:#ffffff; border:none; padding:12px 0; width:100%; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 15px rgba(52,211,153,0.5); -webkit-tap-highlight-color:transparent;">확 인</button>
 </div>
 </div>
 
@@ -136,42 +136,10 @@ var statusDiv = document.getElementById('status');
 window.activeTarget = null;
 var labelElements = [];
 
-// 삼성 브라우저 렌더링 강제 갱신용 팝업 닫기 함수
 window.closeGuide = function() {
 var overlay = document.getElementById('welcome-guide-overlay');
-if (!overlay || overlay.style.display === 'none') return;
-
-overlay.style.opacity = '0';
-overlay.style.visibility = 'hidden';
-overlay.style.transition = 'opacity 0.2s ease, visibility 0.2s ease';
-setTimeout(function() {
-overlay.style.display = 'none';
-}, 200);
+if (overlay) overlay.style.display = 'none';
 };
-
-document.addEventListener('DOMContentLoaded', function() {
-var okBtn = document.getElementById('guide-ok-btn');
-if (okBtn) {
-okBtn.addEventListener('click', function(e) {
-e.preventDefault();
-window.closeGuide();
-}, { passive: false });
-okBtn.addEventListener('touchend', function(e) {
-e.preventDefault();
-window.closeGuide();
-}, { passive: false });
-}
-});
-
-setTimeout(function() {
-var okBtn = document.getElementById('guide-ok-btn');
-if (okBtn) {
-okBtn.onclick = function(e) {
-if(e) e.preventDefault();
-window.closeGuide();
-};
-}
-}, 100);
 
 function moveToCurrentPos() {
 window.closeGuide();
@@ -304,9 +272,8 @@ e => { statusDiv.innerHTML = "GPS 오류: " + e.message; },
 );
 }
 
-/* 엑셀 전체 로케이션 좌표 데이터베이스 (344개 전체 구간 완벽 반영) */
+/* 엑셀 전체 로케이션 좌표 데이터베이스 */
 var locationDB = [
-// Y 구역 세로
 {zone:"Y", type:"세로", col:1, part:"서쪽", startNo:1101, endNo:1159, sLat:36.850811, sLng:126.85863, eLat:36.849020, eLng:126.85863},
 {zone:"Y", type:"세로", col:1, part:"동쪽", startNo:1001, endNo:1059, sLat:36.849007, sLng:126.858659, eLat:36.850829, eLng:126.858659},
 {zone:"Y", type:"세로", col:2, part:"서쪽", startNo:2101, endNo:2156, sLat:36.849116, sLng:126.858519, eLat:36.850810, eLng:126.858519},
@@ -332,7 +299,6 @@ var locationDB = [
 {zone:"Y", type:"세로", col:8, part:"서쪽", startNo:8104, endNo:8121, sLat:36.849960, sLng:126.8576, eLat:36.850511, eLng:126.8576},
 {zone:"Y", type:"세로", col:8, part:"동쪽", startNo:8004, endNo:8021, sLat:36.849978, sLng:126.8577, eLat:36.850530, eLng:126.8577},
 
-// C 구역 세로 (1~8열)
 {zone:"C", type:"세로", col:1, part:"서쪽", startNo:1101, endNo:1167, sLat:36.848702, sLng:126.859820, eLat:36.850810, eLng:126.859820},
 {zone:"C", type:"세로", col:1, part:"동쪽", startNo:1001, endNo:1067, sLat:36.848685, sLng:126.859853, eLat:36.850829, eLng:126.859853},
 {zone:"C", type:"세로", col:2, part:"서쪽", startNo:2101, endNo:2167, sLat:36.848702, sLng:126.859676, eLat:36.850810, eLng:126.859676},
@@ -350,7 +316,6 @@ var locationDB = [
 {zone:"C", type:"세로", col:8, part:"서쪽", startNo:8101, endNo:8167, sLat:36.848702, sLng:126.858791, eLat:36.850810, eLng:126.858791},
 {zone:"C", type:"세로", col:8, part:"동쪽", startNo:8001, endNo:8067, sLat:36.848685, sLng:126.858816, eLat:36.850829, eLng:126.858816},
 
-// B 구역 세로 (1~8열)
 {zone:"B", type:"세로", col:1, part:"서쪽", startNo:1101, endNo:1167, sLat:36.848702, sLng:126.860312, eLat:36.850810, eLng:126.860312},
 {zone:"B", type:"세로", col:1, part:"동쪽", startNo:1001, endNo:1067, sLat:36.848685, sLng:126.860345, eLat:36.850829, eLng:126.860345},
 {zone:"B", type:"세로", col:2, part:"서쪽", startNo:2101, endNo:2167, sLat:36.848702, sLng:126.860168, eLat:36.850810, eLng:126.860168},
@@ -368,39 +333,33 @@ var locationDB = [
 {zone:"B", type:"세로", col:8, part:"서쪽", startNo:8101, endNo:8167, sLat:36.848702, sLng:126.860283, eLat:36.850810, eLng:126.860283},
 {zone:"B", type:"세로", col:8, part:"동쪽", startNo:8001, endNo:8067, sLat:36.848685, sLng:126.860308, eLat:36.850829, eLng:126.860308},
 
-// H 구역 가로 (예시 포함 주요 가로형 구역들 추가)
 {zone:"H", type:"가로", col:3, part:"앞줄1", startNo:3011, endNo:3341, sLat:36.846847, sLng:126.869340, eLat:36.846847, eLng:126.868377},
 {zone:"H", type:"가로", col:3, part:"앞줄2", startNo:3351, endNo:3391, sLat:36.846847, sLng:126.868312, eLat:36.846847, eLng:126.868189},
 {zone:"H", type:"가로", col:3, part:"뒷줄1", startNo:3012, endNo:3342, sLat:36.846881, sLng:126.869340, eLat:36.846881, eLng:126.868377},
 {zone:"H", type:"가로", col:3, part:"뒷줄2", startNo:3352, endNo:3392, sLat:36.846881, sLng:126.868312, eLat:36.846881, eLng:126.868189}
 ];
 
-// 통합 스마트 로케이션 파서 (모든 구역 번호 체계 지원)
 function parseLocation(query) {
 var clean = query.toUpperCase().replace(/\s+/g, '').replace(/X/g, '');
 if (!clean) return null;
 
 var zone = clean.charAt(0);
-// 2글자 구역(예: KA, RA, IA, JA, HA, HB, PA 등) 확인
 if (clean.length > 1 && isNaN(clean.charAt(1))) {
 zone = clean.substring(0, 2);
 }
 
-// 남은 문자열에서 숫자 추출
 var remainder = clean.substring(zone.length);
 var match = remainder.match(/^(\d)(\d)(\d{2})latex
-/); // 예: C1001 -&gt; col=1, part=0, num=01 if (!match) { match = remainder.match(/^(\d)(\d{3})
+/); if (!match) { match = remainder.match(/^(\d)(\d{3})
 
-/); // 예: H3052 또는 C101
+/);
 if (!match) {
-// 만약 Y구역 기존 형식일 경우 백업 처리
 if (zone === 'Y') return parseY1Location(query);
 return null;
 }
 var col = parseInt(match[1], 10);
 var num = parseInt(match[2], 10);
 
-// DB에서 구역과 열이 일치하는 항목 검색
 for (var i = 0; i < locationDB.length; i++) {
 var db = locationDB[i];
 if (db.zone === zone && db.col === col) {
@@ -421,7 +380,6 @@ var col = parseInt(match[1], 10);
 var subCode = parseInt(match[2], 10);
 var num = parseInt(match[3], 10);
 
-// DB 검색 (세밀한 구간 매칭)
 for (var i = 0; i < locationDB.length; i++) {
 var db = locationDB[i];
 if (db.zone === zone && db.col === col) {
@@ -436,7 +394,6 @@ return new naver.maps.LatLng(targetLat, targetLng);
 }
 }
 
-// 백업: Y구역 전용 파서
 if (zone === 'Y') return parseY1Location(query);
 return null;
 }
