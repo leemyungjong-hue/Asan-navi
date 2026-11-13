@@ -84,8 +84,8 @@ box-shadow: 0 8px 25px rgba(249, 115, 22, 0.6); cursor: pointer;
 display: flex; align-items: center; justify-content: center;
 }
 </style>
-<!-- 캐시 무시용 버전 번호 -->
-<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=fs946skmco&v=20261113-v2"></script>
+<!-- 캐시 무시용 버전 번호 갱신 (v20261113-v3) -->
+<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=fs946skmco&v=20261113-v3"></script>
 </head>
 <body>
 <div id="title">아산출고 치장장 MAP</div>
@@ -93,7 +93,7 @@ display: flex; align-items: center; justify-content: center;
 <div id="welcome-guide-overlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center;">
 <div style="background:rgba(15,23,42,0.96); border:2px solid rgba(52,211,153,0.9); border-radius:22px; padding:26px 22px; width:88%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.9);">
 <p style="margin:0 0 18px 0; color:#f8fafc; font-size:14px; font-weight:600; line-height:1.6; word-break:keep-all;">우측 하단 빨간 버튼을 누르면 현재 위치가 표시되며 로케이션 검색시 길안내가 시작됩니다</p>
-<button onclick="closeGuide()" style="background:linear-gradient(135deg, #34d399, #059669); color:#ffffff; border:none; padding:12px 0; width:100%; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 15px rgba(52,211,153,0.5);">확 인</button>
+<button type="button" onclick="window.closeGuide()" style="background:linear-gradient(135deg, #34d399, #059669); color:#ffffff; border:none; padding:12px 0; width:100%; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 15px rgba(52,211,153,0.5);">확 인</button>
 </div>
 </div>
 
@@ -135,7 +135,7 @@ var statusDiv = document.getElementById('status');
 window.activeTarget = null;
 var labelElements = [];
 
-function closeGuide() {
+window.closeGuide = function() {
 var overlay = document.getElementById('welcome-guide-overlay');
 if (overlay) {
 overlay.style.opacity = '0';
@@ -144,10 +144,10 @@ setTimeout(function() {
 overlay.style.display = 'none';
 }, 300);
 }
-}
+};
 
 function moveToCurrentPos() {
-closeGuide();
+window.closeGuide();
 if (currentPos) {
 map.setCenter(currentPos);
 map.setZoom(19);
@@ -356,7 +356,7 @@ return new naver.maps.LatLng(targetLat, targetLng);
 }
 
 function searchLocation() {
-closeGuide();
+window.closeGuide();
 var rawInput = document.getElementById('search-input').value.trim();
 var targetCoord = parseLocation(rawInput);
 if (!targetCoord) {
