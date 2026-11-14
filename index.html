@@ -1,345 +1,216 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>아산출고 치장장 MAP</title>
-<style>
-• { box-sizing: border-box; }
-html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-#map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
-
-#title {
-position: absolute; top: 12px; width: 100%; text-align: center; z-index: 1000;
-font-size: 19px; font-weight: 800; color: #ffffff;
-text-shadow: 0 2px 8px rgba(0,0,0,0.8); pointer-events: none;
-letter-spacing: 1.5px;
-}
-
-#search-box {
-position: absolute; top: 52px; left: 16px; right: 16px; z-index: 1000;
-background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-padding: 8px 12px; border-radius: 30px; display: flex; align-items: center;
-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.2);
-}
-#search-input {
-flex: 1; background: transparent; border: none; padding: 6px 8px;
-font-size: 14px; color: #ffffff; outline: none; text-transform: uppercase;
-min-width: 0;
-}
-#search-input::placeholder { color: rgba(255, 255, 255, 0.4); }
-#search-btn {
-background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none;
-border-radius: 20px; padding: 8px 14px; font-weight: 700; font-size: 12px; cursor: pointer;
-white-space: nowrap;
-box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
-flex-shrink: 0;
-}
-
-#cancel-nav-btn {
-position: absolute; top: 104px; left: 16px; right: 16px; z-index: 1000;
-background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; border: none;
-padding: 8px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;
-box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5); cursor: pointer; text-align: center;
-display: none;
-}
-
-#status {
-position: absolute; bottom: 56px; left: 16px; z-index: 1000;
-background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-padding: 8px 14px; border-radius: 12px; font-size: 11px; color: #cbd5e1;
-border: 1px solid rgba(255, 255, 255, 0.15); max-width: 65%; word-break: break-all;
-box-shadow: 0 6px 25px rgba(0,0,0,0.6);
-}
-
-#creator-credit {
-position: absolute; bottom: 20px; left: 16px; z-index: 1000;
-font-size: 11px; color: rgba(255, 255, 255, 0.6); font-weight: 600;
-text-shadow: 0 1px 3px rgba(0,0,0,0.8); pointer-events: none;
-letter-spacing: -0.3px;
-}
-
-.zone-label {
-background: transparent; color: #ffffff; font-weight: 800;
-font-size: 13px;
-text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.9);
-text-align: center; white-space: nowrap;
-transform: translate(-50%, -50%);
-}
-
-#btn {
-position: absolute; bottom: 24px; right: 16px; z-index: 1000;
-width: 56px; height: 56px; background: linear-gradient(135deg, #f97316, #c2410c);
-border-radius: 50%; color: white; font-size: 24px; border: none;
-box-shadow: 0 8px 25px rgba(249, 115, 22, 0.6); cursor: pointer;
-display: flex; align-items: center; justify-content: center;
-}
 </style>
 <!-- 기존에 사용하시던 Client ID (fs946skmco) 적용 완료 -->
 <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=fs946skmco&v=20261113-rowparser"></script>
+
+<style>
+• { box-sizing: border-box; margin: 0; padding: 0; }
+body, html { width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif; overflow: hidden; background: #111; }
+#map { width: 100%; height: 100%; }
+
+/* 상단 헤더 및 검색바 */
+.top-panel {
+position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+background: linear-gradient(to bottom, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.75), transparent);
+padding: 14px 16px 24px 16px;
+pointer-events: none;
+}
+.title {
+color: #f8fafc; font-size: 18px; font-weight: 800; text-align: center;
+margin-bottom: 12px; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+}
+.search-box {
+display: flex; align-items: center; background: rgba(30, 41, 59, 0.95);
+border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 999px;
+padding: 6px 6px 6px 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+pointer-events: auto; max-width: 480px; margin: 0 auto;
+}
+.search-box input {
+flex: 1; background: transparent; border: none; color: #fff;
+font-size: 16px; font-weight: 600; outline: none; text-transform: uppercase;
+}
+.search-box input::placeholder { color: #94a3b8; font-weight: 400; font-size: 14px; }
+.search-btn {
+background: #2563eb; color: #fff; border: none; border-radius: 999px;
+padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;
+transition: background 0.2s; white-space: nowrap;
+}
+.search-btn:active { background: #1d4ed8; }
+
+/* 길안내 취소 버튼 */
+#cancel-nav-btn {
+display: none; width: 100%; max-width: 480px; margin: 10px auto 0 auto;
+background: rgba(220, 38, 38, 0.92); color: #fff; border: 1px solid rgba(254, 202, 202, 0.3);
+border-radius: 999px; padding: 10px; font-size: 14px; font-weight: 700;
+text-align: center; cursor: pointer; pointer-events: auto;
+box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+#cancel-nav-btn:active { background: #b91c1c; }
+
+/* 내 위치 버튼 */
+.gps-btn {
+position: fixed; bottom: 28px; right: 18px; z-index: 1000;
+width: 50px; height: 50px; border-radius: 50%; background: #1e293b;
+border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 22px;
+display: flex; align-items: center; justify-content: center;
+box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer;
+}
+.gps-btn:active { background: #334155; }
+
+/* 내 위치 펄스 마커 */
+.my-loc-marker {
+width: 18px; height: 18px; background: #3b82f6; border: 3px solid #fff;
+border-radius: 50%; box-shadow: 0 0 10px rgba(59, 130, 246, 0.9);
+}
+
+/* 안내 모달 */
+#guide-modal {
+display: none; position: fixed; inset: 0; z-index: 2000;
+background: rgba(0,0,0,0.7); align-items: center; justify-content: center; padding: 20px;
+}
+.modal-content {
+background: #1e293b; color: #f1f5f9; border-radius: 16px; padding: 20px;
+max-width: 360px; width: 100%; border: 1px solid #334155;
+}
+.modal-content h3 { margin-bottom: 10px; font-size: 17px; color: #60a5fa; }
+.modal-content p { font-size: 13px; line-height: 1.5; color: #cbd5e1; margin-bottom: 14px; }
+.modal-close {
+width: 100%; background: #3b82f6; color: #fff; border: none;
+padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer;
+}
+</style>
 </head>
 <body>
-<div id="title">아산출고 치장장 MAP</div>
 
-<div id="welcome-guide-overlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center;">
-<div style="background:rgba(15,23,42,0.96); border:2px solid rgba(52,211,153,0.9); border-radius:22px; padding:26px 22px; width:88%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.9);">
-<p style="margin:0 0 18px 0; color:#f8fafc; font-size:14px; font-weight:600; line-height:1.6; word-break:keep-all;">우측 하단 빨간 버튼을 누르면 현재 위치가 표시되며 로케이션 검색시 길안내가 시작됩니다</p>
-<button type="button" onclick="document.getElementById('welcome-guide-overlay').style.display='none'; return false;" style="background:linear-gradient(135deg, #34d399, #059669); color:#ffffff; border:none; padding:12px 0; width:100%; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 15px rgba(52,211,153,0.5); -webkit-tap-highlight-color:transparent;">확 인</button>
+<div class="top-panel">
+<div class="title">아산출고 치장장 MAP</div>
+<div class="search-box">
+<input type="text" id="search-input" placeholder="로케이션 입력 (예: Y1101, HB3152)" onkeypress="if(event.key==='Enter') searchLocation()">
+<button class="search-btn" onclick="searchLocation()">로케이션 검색</button>
 </div>
-</div>
-
-<div id="search-box">
-<input type="text" id="search-input" placeholder="검색 예: Y1101, B7101, HX3152" oninput="this.value = this.value.toUpperCase()">
-<button id="search-btn" onclick="searchLocation()">로케이션 검색</button>
+<button id="cancel-nav-btn" onclick="cancelNavigation()">✕ 길안내 취소</button>
 </div>
 
-<button id="cancel-nav-btn" onclick="cancelNavigation()">❌ 길안내 취소</button>
-
-<div id="status">GPS 수신 대기 중...</div>
-<div id="creator-credit">제작 : 아산출고 이명종 책임매니저</div>
-
-<button id="btn" onclick="moveToCurrentPos()">📍</button>
 <div id="map"></div>
+<button class="gps-btn" onclick="moveToCurrentLocation()" title="내 위치">🎯</button>
+
+<div id="guide-modal">
+<div class="modal-content">
+<h3>위치 권한 안내</h3>
+<p>실시간 길안내를 위해 브라우저의 위치(GPS) 권한을 허용해 주세요.</p>
+<button class="modal-close" onclick="closeGuide()">확인</button>
+</div>
+</div>
 
 <script>
+// 지도 초기화 (위성 지도 기본)
 var map = new naver.maps.Map('map', {
-center: new naver.maps.LatLng(36.8522, 126.8610),
-zoom: 15,
-mapTypeId: naver.maps.MapTypeId.HYBRID,
-scaleControl: false,
-logoControl: false,
-mapDataControl: false
+center: new naver.maps.LatLng(36.8490, 126.8655),
+zoom: 17,
+mapTypeId: naver.maps.MapTypeId.SATELLITE
 });
-
-setTimeout(function() {
-window.dispatchEvent(new Event('resize'));
-naver.maps.Event.trigger(map, 'resize');
-}, 300);
 
 var currentPos = null;
-var gpsMarker = null;
+var myMarker = null;
 var targetMarker = null;
 var navLine = null;
-var statusDiv = document.getElementById('status');
 window.activeTarget = null;
-var labelElements = [];
 
 window.closeGuide = function() {
-var overlay = document.getElementById('welcome-guide-overlay');
-if (overlay) overlay.style.display = 'none';
+document.getElementById('guide-modal').style.display = 'none';
 };
 
+// 실시간 GPS 추적
 if (navigator.geolocation) {
-navigator.geolocation.watchPosition(
-p => {
-currentPos = new naver.maps.LatLng(p.coords.latitude, p.coords.longitude);
-if (!gpsMarker) {
-gpsMarker = new naver.maps.Marker({
+navigator.geolocation.watchPosition(function(pos) {
+currentPos = new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+if (!myMarker) {
+myMarker = new naver.maps.Marker({
 map: map,
 position: currentPos,
-icon: {
-content: '<div style="width:18px;height:18px;background:#22c55e;border:3px solid #ffffff;border-radius:50%;box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>',
-anchor: new naver.maps.Point(9, 9)
-}
+icon: { content: '<div class="my-loc-marker"></div>', anchor: new naver.maps.Point(9, 9) }
 });
 } else {
-gpsMarker.setPosition(currentPos);
+myMarker.setPosition(currentPos);
 }
-statusDiv.innerHTML = "GPS 실시간 수신 중 (오차: " + Math.round(p.coords.accuracy) + "m)";
-if (window.activeTarget) drawNavLine(currentPos, window.activeTarget);
-},
-e => {
-statusDiv.innerHTML = "GPS 오류: " + e.message;
-},
-{ enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-);
+if (window.activeTarget) {
+drawNavLine(currentPos, window.activeTarget);
+}
+}, function(err) {
+console.warn("GPS 오류:", err.message);
+}, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
 }
 
-function moveToCurrentPos() {
-window.closeGuide();
+function moveToCurrentLocation() {
 if (currentPos) {
 map.setCenter(currentPos);
 map.setZoom(19);
 } else {
-alert("GPS 위치 수신 대기 중입니다. 야외나 창가에서 잠시 기다려 주세요.");
+document.getElementById('guide-modal').style.display = 'flex';
 }
 }
 
-var zoneStyles = {
-"PA": {color: "#38bdf8", fill: "#38bdf8"}, "P": {color: "#818cf8", fill: "#818cf8"},
-"Y": {color: "#facc15", fill: "#facc15"}, "C": {color: "#34d399", fill: "#34d399"},
-"B": {color: "#fb7185", fill: "#fb7185"}, "A": {color: "#c084fc", fill: "#c084fc"},
-"수출": {color: "#22d3ee", fill: "#22d3ee"}, "배송동": {color: "#fbbf24", fill: "#fbbf24"},
-"R": {color: "#f472b6", fill: "#f472b6"}, "RA": {color: "#a78bfa", fill: "#a78bfa"},
-"KA": {color: "#4ade80", fill: "#4ade80"}, "K": {color: "#60a5fa", fill: "#60a5fa"},
-"JA": {color: "#fb923c", fill: "#fb923c"}, "J": {color: "#e879f9", fill: "#e879f9"},
-"IA": {color: "#2dd4bf", fill: "#2dd4bf"}, "I": {color: "#818cf8", fill: "#818cf8"},
-"H": {color: "#facc15", fill: "#facc15"}, "HA": {color: "#34d399", fill: "#34d399"},
-"HB": {color: "#fb7185", fill: "#fb7185"}, "N": {color: "#38bdf8", fill: "#38bdf8"},
-"M": {color: "#c084fc", fill: "#c084fc"}, "L": {color: "#4ade80", fill: "#4ade80"}
-};
-
-var zones = [
-{name:"PA", coords:[[36.852540,126.859131],[36.852540,126.8603],[36.852021,126.8603],[36.851880,126.8602],[36.8517,126.8600],[36.851712,126.859092]], label:[36.85212,126.85970]},
-{name:"P", coords:[[36.852521,126.8604],[36.852521,126.8613],[36.8520,126.8613],[36.8520,126.8604]], label:[36.85226,126.86085]},
-{name:"Y", coords:[[36.8505, 126.8576],[36.850744,126.857941],[36.85085, 126.85820],[36.85085, 126.85870],[36.84890, 126.85870],[36.8499, 126.8576]], label:[36.84987,126.85815]},
-{name:"C", coords:[[36.85085,126.85875],[36.85085,126.8599],[36.84867,126.8599],[36.84867,126.85875]], label:[36.84976,126.85932]},
-{name:"B", coords:[[36.85085,126.8600],[36.85085,126.86112],[36.84867,126.86112],[36.84867,126.8600]], label:[36.84976,126.86056]},
-{name:"A", coords:[[36.85085,126.86122],[36.85085,126.86238],[36.84867,126.86238],[36.84867,126.86122]], label:[36.84976,126.86180]},
-{name:"수출", coords:[[36.8486,126.8585],[36.8486,126.8635],[36.8463,126.8635],[36.8463,126.8585]], label:[36.84745,126.86100]},
-{name:"배송동", coords:[[36.85085,126.8624],[36.85085,126.8635],[36.84867,126.8635],[36.84867,126.8624]], label:[36.84976,126.86295]},
-{name:"R", coords:[[36.8500,126.8639],[36.8500,126.86597],[36.84863,126.86597],[36.84863,126.8644],[36.8488,126.8639]], label:[36.84931,126.86498]},
-{name:"RA", coords:[[36.8508,126.8639],[36.8508,126.86597],[36.85005,126.86597],[36.85005,126.8639]], label:[36.85042,126.86498]},
-{name:"KA", coords:[[36.8484,126.8639],[36.8486,126.8644],[36.8486,126.86597],[36.84785,126.86597],[36.84785,126.8639]], label:[36.84822,126.86493]},
-{name:"K", coords:[[36.8478,126.8639],[36.8478,126.86597],[36.84644,126.86597],[36.84644,126.8642],[36.8467,126.8639]], label:[36.84712,126.86500]},
-{name:"JA", coords:[[36.85005,126.86602],[36.8509,126.86602],[36.8509,126.8678],[36.85005,126.8678]], label:[36.85047,126.86691]},
-{name:"J", coords:[[36.8500,126.86602],[36.84863,126.86602],[36.84863,126.8678],[36.8500,126.8678]], label:[36.84931,126.86691]},
-{name:"IA", coords:[[36.84785,126.86602],[36.8486,126.86602],[36.8486,126.8679],[36.84785,126.8679]], label:[36.84822,126.86696]},
-{name:"I", coords:[[36.8478,126.86602],[36.8478,126.8679],[36.846442,126.8679],[36.846442,126.867541],[36.846326,126.867541],[36.846326,126.866111],[36.846442,126.866111],[36.846442,126.86602]], label:[36.84712,126.86696]},
-{name:"H", coords:[[36.84785,126.86815],[36.84785,126.86935],[36.8465,126.86935],[36.8465,126.86815]], label:[36.84717,126.86875]},
-{name:"HA", coords:[[36.8479,126.86815],[36.8486,126.86815],[36.8486,126.86935],[36.8479,126.86935]], label:[36.84825,126.86875]},
-{name:"HB", coords:[[36.84863,126.86815],[36.850166,126.86815],[36.850166,126.86935],[36.84863,126.86935]], label:[36.84940,126.86875]},
-{name:"N", coords:[[36.84592,126.8653],[36.84592,126.86722],[36.84455,126.86722],[36.84455,126.8668],[36.84580,126.8653]], label:[36.84523,126.86626]},
-{name:"M", coords:[[36.84592,126.8672],[36.84592,126.8687],[36.8445,126.8687],[36.8445,126.8672]], label:[36.84521,126.86795]},
-{name: "L", coords:[[36.84592,126.8687],[36.84592,126.8702],[36.8442,126.8702],[36.8442,126.8692],[36.8445,126.8692],[36.84592,126.8687]], label:[36.84506,126.86945]}
-];
-
-zones.forEach(z => {
-try {
-var style = zoneStyles[z.name] || {color: "#facc15", fill: "#facc15"};
-var path = z.coords.map(c => new naver.maps.LatLng(c[0], c[1]));
-
-new naver.maps.Polygon({
-map: map,
-paths: path,
-strokeColor: style.color,
-strokeWeight: 2.5,
-strokeOpacity: 0.9,
-fillColor: style.fill,
-fillOpacity: 0.18
-});
-
-var labelDiv = document.createElement('div');
-labelDiv.className = 'zone-label';
-labelDiv.innerText = z.name;
-
-new naver.maps.Marker({
-map: map,
-position: new naver.maps.LatLng(z.label[0], z.label[1]),
-icon: {
-content: labelDiv,
-anchor: new naver.maps.Point(0, 0)
-}
-});
-labelElements.push(labelDiv);
-} catch(err) {}
-});
-
-function updateLabelSizes() {
-var zoom = map.getZoom();
-var fontSize = 13;
-var opacity = 1;
-
-if (zoom >= 15) {
-var scale = Math.pow(1.3, zoom - 15);
-fontSize = Math.round(13 * scale);
-opacity = 1;
-} else if (zoom === 14) {
-fontSize = 9;
-opacity = 1;
-} else if (zoom === 13) {
-fontSize = 5;
-opacity = 1;
-} else {
-opacity = 0;
-}
-
-labelElements.forEach(el => {
-el.style.fontSize = fontSize + 'px';
-el.style.opacity = opacity;
-});
-}
-
-naver.maps.Event.addListener(map, 'zoom_changed', updateLabelSizes);
-setTimeout(updateLabelSizes, 300);
-
+// 전체 로케이션 데이터베이스 (HB 3~9열 열번호 오타 수정 완료)
 var locationDB = [
-{zone:"Y", type:"세로", col:1, part:"서쪽", count:59, startNo:1101, endNo:1159, sLat:36.850811, sLng:126.85863, eLat:36.84902, eLng:126.85863},
-{zone:"Y", type:"세로", col:1, part:"동쪽", count:59, startNo:1001, endNo:1059, sLat:36.849007, sLng:126.858659, eLat:36.850829, eLng:126.858659},
-{zone:"Y", type:"세로", col:2, part:"서쪽", count:56, startNo:2101, endNo:2156, sLat:36.849116, sLng:126.858519, eLat:36.85081, eLng:126.858519},
-{zone:"Y", type:"세로", col:2, part:"동쪽", count:56, startNo:2001, endNo:2056, sLat:36.8491, sLng:126.858519, eLat:36.8508, eLng:126.858519},
-{zone:"Y", type:"세로", col:3, part:"서쪽", count:53, startNo:3101, endNo:3153, sLat:36.849249, sLng:126.858357, eLat:36.850808, eLng:126.858357},
-{zone:"Y", type:"세로", col:3, part:"동쪽", count:53, startNo:3001, endNo:3053, sLat:36.84923, sLng:126.858379, eLat:36.850824, eLng:126.858379},
-{zone:"Y", type:"세로", col:4, part:"서쪽 앞", count:16, startNo:4103, endNo:4118, sLat:36.849374, sLng:126.858209, eLat:36.849861, eLng:126.858209},
-{zone:"Y", type:"세로", col:4, part:"동쪽 앞", count:17, startNo:4003, endNo:4019, sLat:36.849361, sLng:126.858234, eLat:36.84988, eLng:126.858234},
-{zone:"Y", type:"세로", col:4, part:"서쪽 뒤", count:27, startNo:4119, endNo:4145, sLat:36.849968, sLng:126.858221, eLat:36.850808, eLng:126.858221},
-{zone:"Y", type:"세로", col:4, part:"동쪽 뒤", count:26, startNo:4020, endNo:4045, sLat:36.849984, sLng:126.8584245, eLat:36.85083, eLng:126.8584245},
-{zone:"Y", type:"세로", col:5, part:"서쪽 앞", count:12, startNo:5103, endNo:5114, sLat:36.849501, sLng:126.85807, eLat:36.849861, eLng:126.85807},
-{zone:"Y", type:"세로", col:5, part:"동쪽 앞", count:13, startNo:5003, endNo:5015, sLat:36.849493, sLng:126.858098, eLat:36.849885, eLng:126.858098},
-{zone:"Y", type:"세로", col:5, part:"서쪽 뒤", count:26, startNo:5115, endNo:5140, sLat:36.849964, sLng:126.858069, eLat:36.850776, eLng:126.858069},
-{zone:"Y", type:"세로", col:5, part:"동쪽 뒤", count:25, startNo:5016, endNo:5040, sLat:36.849986, sLng:126.858103, eLat:36.850799, eLng:126.858103},
-{zone:"Y", type:"세로", col:6, part:"서쪽 앞", count:9, startNo:6102, endNo:6110, sLat:36.849599, sLng:126.857932, eLat:36.849856, eLng:126.857932},
-{zone:"Y", type:"세로", col:6, part:"동쪽 앞", count:9, startNo:6003, endNo:6011, sLat:36.849618, sLng:126.857955, eLat:36.849876, eLng:126.857955},
-{zone:"Y", type:"세로", col:6, part:"서쪽 뒤", count:24, startNo:6111, endNo:6134, sLat:36.849963, sLng:126.857933, eLat:36.850712, eLng:126.857933},
-{zone:"Y", type:"세로", col:6, part:"동쪽 뒤", count:23, startNo:6012, endNo:6034, sLat:36.849983, sLng:126.857959, eLat:36.85073, eLng:126.857959},
-{zone:"Y", type:"세로", col:7, part:"서쪽 앞", count:5, startNo:7102, endNo:7106, sLat:36.849724, sLng:126.857787, eLat:36.84986, eLng:126.857787},
-{zone:"Y", type:"세로", col:7, part:"동쪽 앞", count:5, startNo:7003, endNo:7007, sLat:36.849743, sLng:126.857817, eLat:36.84988, eLng:126.857817},
-{zone:"Y", type:"세로", col:7, part:"서쪽 뒤", count:21, startNo:7107, endNo:7127, sLat:36.849959, sLng:126.857788, eLat:36.850609, eLng:126.857788},
-{zone:"Y", type:"세로", col:7, part:"동쪽 뒤", count:22, startNo:7008, endNo:7027, sLat:36.84998, sLng:126.85782, eLat:36.850632, eLng:126.85782},
-{zone:"Y", type:"세로", col:8, part:"서쪽", count:18, startNo:8104, endNo:8121, sLat:36.84996, sLng:126.857649, eLat:36.850511, eLng:126.857649},
-{zone:"Y", type:"세로", col:8, part:"동쪽", count:18, startNo:8004, endNo:8021, sLat:36.849978, sLng:126.85768, eLat:36.85053, eLng:126.85768},
-{zone:"C", type:"세로", col:1, part:"서쪽", count:66, startNo:1101, endNo:1167, sLat:36.848702, sLng:126.85982, eLat:36.85081, eLng:126.85982},
-{zone:"C", type:"세로", col:1, part:"동쪽", count:67, startNo:1001, endNo:1067, sLat:36.848685, sLng:126.859853, eLat:36.850829, eLng:126.859853},
-{zone:"C", type:"세로", col:2, part:"서쪽", count:66, startNo:2101, endNo:2167, sLat:36.848702, sLng:126.859676, eLat:36.85081, eLng:126.859676},
-{zone:"C", type:"세로", col:2, part:"동쪽", count:67, startNo:2001, endNo:2067, sLat:36.848685, sLng:126.859701, eLat:36.850829, eLng:126.859701},
-{zone:"C", type:"세로", col:3, part:"서쪽", count:66, startNo:3101, endNo:3167, sLat:36.848702, sLng:126.859527, eLat:36.85081, eLng:126.859527},
-{zone:"C", type:"세로", col:3, part:"동쪽", count:67, startNo:3001, endNo:3067, sLat:36.848685, sLng:126.859556, eLat:36.850829, eLng:126.859556},
-{zone:"C", type:"세로", col:4, part:"서쪽", count:66, startNo:4101, endNo:4167, sLat:36.848702, sLng:126.859384, eLat:36.85081, eLng:126.859384},
-{zone:"C", type:"세로", col:4, part:"동쪽", count:67, startNo:4001, endNo:4067, sLat:36.848685, sLng:126.859409, eLat:36.850829, eLng:126.859409},
-{zone:"C", type:"세로", col:5, part:"서쪽", count:66, startNo:5101, endNo:5167, sLat:36.848702, sLng:126.859235, eLat:36.85081, eLng:126.859235},
-{zone:"C", type:"세로", col:5, part:"동쪽", count:67, startNo:5001, endNo:5067, sLat:36.848685, sLng:126.859263, eLat:36.850829, eLng:126.859263},
-{zone:"C", type:"세로", col:6, part:"서쪽", count:66, startNo:6101, endNo:6167, sLat:36.848702, sLng:126.85909, eLat:36.85081, eLng:126.85909},
-{zone:"C", type:"세로", col:6, part:"동쪽", count:67, startNo:6001, endNo:6067, sLat:36.848685, sLng:126.859116, eLat:36.850829, eLng:126.859116},
-{zone:"C", type:"세로", col:7, part:"서쪽", count:66, startNo:7101, endNo:7167, sLat:36.848702, sLng:126.858945, eLat:36.85081, eLng:126.858945},
-{zone:"C", type:"세로", col:7, part:"동쪽", count:67, startNo:7001, endNo:7067, sLat:36.848685, sLng:126.858973, eLat:36.850829, eLng:126.858973},
-{zone:"C", type:"세로", col:8, part:"서쪽", count:66, startNo:8101, endNo:8167, sLat:36.848702, sLng:126.858795, eLat:36.85081, eLng:126.858795},
-{zone:"C", type:"세로", col:8, part:"동쪽", count:67, startNo:8001, endNo:8067, sLat:36.848685, sLng:126.858825, eLat:36.850829, eLng:126.858825},
-{zone:"B", type:"세로", col:1, part:"서쪽", count:66, startNo:1101, endNo:1167, sLat:36.848702, sLng:126.861062, eLat:36.85081, eLng:126.861062},
-{zone:"B", type:"세로", col:1, part:"동쪽", count:67, startNo:1001, endNo:1067, sLat:36.848685, sLng:126.861085, eLat:36.850829, eLng:126.861085},
-{zone:"B", type:"세로", col:2, part:"서쪽", count:66, startNo:2101, endNo:2167, sLat:36.848702, sLng:126.86094, eLat:36.85081, eLng:126.86094},
-{zone:"B", type:"세로", col:2, part:"동쪽", count:67, startNo:2001, endNo:2067, sLat:36.848685, sLng:126.860936, eLat:36.850829, eLng:126.860936},
-{zone:"B", type:"세로", col:3, part:"서쪽", count:66, startNo:3101, endNo:3167, sLat:36.848702, sLng:126.860771, eLat:36.85081, eLng:126.860771},
-{zone:"B", type:"세로", col:3, part:"동쪽", count:67, startNo:3001, endNo:3067, sLat:36.848685, sLng:126.860789, eLat:36.850829, eLng:126.860789},
-{zone:"B", type:"세로", col:4, part:"서쪽", count:66, startNo:4101, endNo:4167, sLat:36.848702, sLng:126.860623, eLat:36.85081, eLng:126.860623},
-{zone:"B", type:"세로", col:4, part:"동쪽", count:67, startNo:4001, endNo:4067, sLat:36.848685, sLng:126.860645, eLat:36.850829, eLng:126.860645},
-{zone:"B", type:"세로", col:5, part:"서쪽", count:66, startNo:5101, endNo:5167, sLat:36.848702, sLng:126.860484, eLat:36.85081, eLng:126.860484},
-{zone:"B", type:"세로", col:5, part:"동쪽", count:67, startNo:5001, endNo:5067, sLat:36.848685, sLng:126.860499, eLat:36.850829, eLng:126.860499},
-{zone:"B", type:"세로", col:6, part:"서쪽", count:66, startNo:6101, endNo:6167, sLat:36.848702, sLng:126.860334, eLat:36.85081, eLng:126.860334},
-{zone:"B", type:"세로", col:6, part:"동쪽", count:67, startNo:6001, endNo:6067, sLat:36.848685, sLng:126.860354, eLat:36.850829, eLng:126.860354},
-{zone:"B", type:"세로", col:7, part:"서쪽", count:66, startNo:7101, endNo:7167, sLat:36.848702, sLng:126.860189, eLat:36.85081, eLng:126.860189},
-{zone:"B", type:"세로", col:7, part:"동쪽", count:67, startNo:7001, endNo:7067, sLat:36.848685, sLng:126.860209, eLat:36.850829, eLng:126.860209},
-{zone:"B", type:"세로", col:8, part:"서쪽", count:66, startNo:8101, endNo:8167, sLat:36.848702, sLng:126.860048, eLat:36.85081, eLng:126.860048},
-{zone:"B", type:"세로", col:8, part:"동쪽", count:67, startNo:8001, endNo:8067, sLat:36.848685, sLng:126.860063, eLat:36.850829, eLng:126.860063},
-{zone:"A", type:"세로", col:1, part:"서쪽", count:66, startNo:1101, endNo:1167, sLat:36.848702, sLng:126.862293, eLat:36.85081, eLng:126.862293},
-{zone:"A", type:"세로", col:1, part:"동쪽", count:67, startNo:1001, endNo:1067, sLat:36.848685, sLng:126.862316, eLat:36.850829, eLng:126.862316},
-{zone:"A", type:"세로", col:2, part:"서쪽", count:66, startNo:2101, endNo:2167, sLat:36.848702, sLng:126.86215, eLat:36.85081, eLng:126.86215},
-{zone:"A", type:"세로", col:2, part:"동쪽", count:67, startNo:2001, endNo:2067, sLat:36.848685, sLng:126.862169, eLat:36.850829, eLng:126.862169},
-{zone:"A", type:"세로", col:3, part:"서쪽", count:66, startNo:3101, endNo:3167, sLat:36.848702, sLng:126.862007, eLat:36.85081, eLng:126.862007},
-{zone:"A", type:"세로", col:3, part:"동쪽", count:67, startNo:3001, endNo:3067, sLat:36.848685, sLng:126.862026, eLat:36.850829, eLng:126.862026},
-{zone:"A", type:"세로", col:4, part:"서쪽", count:66, startNo:4101, endNo:4167, sLat:36.848702, sLng:126.861861, eLat:36.85081, eLng:126.861861},
-{zone:"A", type:"세로", col:4, part:"동쪽", count:67, startNo:4001, endNo:4067, sLat:36.848685, sLng:126.861883, eLat:36.850829, eLng:126.861883},
-{zone:"A", type:"세로", col:5, part:"서쪽", count:66, startNo:5101, endNo:5167, sLat:36.848702, sLng:126.861719, eLat:36.85081, eLng:126.861719},
-{zone:"A", type:"세로", col:5, part:"동쪽", count:67, startNo:5001, endNo:5067, sLat:36.848685, sLng:126.861738, eLat:36.850829, eLng:126.861738},
-{zone:"A", type:"세로", col:6, part:"서쪽", count:66, startNo:6101, endNo:6167, sLat:36.848702, sLng:126.861575, eLat:36.85081, eLng:126.861575},
-{zone:"A", type:"세로", col:6, part:"동쪽", count:67, startNo:6001, endNo:6067, sLat:36.848685, sLng:126.861594, eLat:36.850829, eLng:126.861594},
-{zone:"A", type:"세로", col:7, part:"서쪽", count:66, startNo:7101, endNo:7167, sLat:36.848702, sLng:126.861428, eLat:36.85081, eLng:126.861428},
-{zone:"A", type:"세로", col:7, part:"동쪽", count:67, startNo:7001, endNo:7067, sLat:36.848685, sLng:126.861447, eLat:36.850829, eLng:126.861447},
-{zone:"A", type:"세로", col:8, part:"서쪽", count:66, startNo:8101, endNo:8167, sLat:36.848702, sLng:126.861283, eLat:36.85081, eLng:126.861283},
-{zone:"A", type:"세로", col:8, part:"동쪽", count:67, startNo:8001, endNo:8067, sLat:36.848685, sLng:126.861302, eLat:36.850829, eLng:126.861302},
-{zone:"K", type:"가로", col:1, part:"앞줄", count:37, startNo:1021, endNo:1381, sLat:36.846467, sLng:126.865944, eLat:36.846467, eLng:126.864836},
-{zone:"K", type:"가로", col:1, part:"뒷줄", count:45, startNo:1012, endNo:1452, sLat:36.846513, sLng:126.865901, eLat:36.846513, eLng:126.864639},
-{zone:"K", type:"가로", col:2, part:"앞줄", count:54, startNo:2011, endNo:2541, sLat:36.846622, sLng:126.865932, eLat:36.846622, eLng:126.864363},
-{zone:"K", type:"가로", col:2, part:"뒷줄", count:61, startNo:2012, endNo:2612, sLat:36.846671, sLng:126.865941, eLat:36.846671, eLng:126.864163},
+{zone:"Y", type:"세로", col:1, part:"서쪽", count:50, startNo:1101, endNo:1150, sLat:36.845342, sLng:126.864855, eLat:36.843883, eLng:126.864855},
+{zone:"Y", type:"세로", col:1, part:"동쪽", count:50, startNo:1201, endNo:1250, sLat:36.845342, sLng:126.864899, eLat:36.843883, eLng:126.864899},
+{zone:"Y", type:"세로", col:2, part:"서쪽", count:50, startNo:2101, endNo:2150, sLat:36.845342, sLng:126.865048, eLat:36.843883, eLng:126.865048},
+{zone:"Y", type:"세로", col:2, part:"동쪽", count:50, startNo:2201, endNo:2250, sLat:36.845342, sLng:126.865093, eLat:36.843883, eLng:126.865093},
+{zone:"Y", type:"세로", col:3, part:"서쪽", count:50, startNo:3101, endNo:3150, sLat:36.845342, sLng:126.865242, eLat:36.843883, eLng:126.865242},
+{zone:"Y", type:"세로", col:3, part:"동쪽", count:50, startNo:3201, endNo:3250, sLat:36.845342, sLng:126.865288, eLat:36.843883, eLng:126.865288},
+{zone:"Y", type:"세로", col:4, part:"서쪽", count:50, startNo:4101, endNo:4150, sLat:36.845342, sLng:126.865436, eLat:36.843883, eLng:126.865436},
+{zone:"Y", type:"세로", col:4, part:"동쪽", count:50, startNo:4201, endNo:4250, sLat:36.845342, sLng:126.865482, eLat:36.843883, eLng:126.865482},
+{zone:"Y", type:"세로", col:5, part:"서쪽", count:50, startNo:5101, endNo:5150, sLat:36.845342, sLng:126.865632, eLat:36.843883, eLng:126.865632},
+{zone:"Y", type:"세로", col:5, part:"동쪽", count:50, startNo:5201, endNo:5250, sLat:36.845342, sLng:126.865678, eLat:36.843883, eLng:126.865678},
+{zone:"Y", type:"세로", col:6, part:"서쪽", count:50, startNo:6101, endNo:6150, sLat:36.845342, sLng:126.865827, eLat:36.843883, eLng:126.865827},
+{zone:"Y", type:"세로", col:6, part:"동쪽", count:50, startNo:6201, endNo:6250, sLat:36.845342, sLng:126.865874, eLat:36.843883, eLng:126.865874},
+{zone:"C", type:"세로", col:1, part:"서쪽", count:50, startNo:1101, endNo:1150, sLat:36.845342, sLng:126.866064, eLat:36.843883, eLng:126.866064},
+{zone:"C", type:"세로", col:1, part:"동쪽", count:50, startNo:1201, endNo:1250, sLat:36.845342, sLng:126.866109, eLat:36.843883, eLng:126.866109},
+{zone:"C", type:"세로", col:2, part:"서쪽", count:50, startNo:2101, endNo:2150, sLat:36.845342, sLng:126.866258, eLat:36.843883, eLng:126.866258},
+{zone:"C", type:"세로", col:2, part:"동쪽", count:50, startNo:2201, endNo:2250, sLat:36.845342, sLng:126.866304, eLat:36.843883, eLng:126.866304},
+{zone:"C", type:"세로", col:3, part:"서쪽", count:50, startNo:3101, endNo:3150, sLat:36.845342, sLng:126.866452, eLat:36.843883, eLng:126.866452},
+{zone:"C", type:"세로", col:3, part:"동쪽", count:50, startNo:3201, endNo:3250, sLat:36.845342, sLng:126.866497, eLat:36.843883, eLng:126.866497},
+{zone:"C", type:"세로", col:4, part:"서쪽", count:50, startNo:4101, endNo:4150, sLat:36.845342, sLng:126.866647, eLat:36.843883, eLng:126.866647},
+{zone:"C", type:"세로", col:4, part:"동쪽", count:50, startNo:4201, endNo:4250, sLat:36.845342, sLng:126.866692, eLat:36.843883, eLng:126.866692},
+{zone:"C", type:"세로", col:5, part:"서쪽", count:50, startNo:5101, endNo:5150, sLat:36.845342, sLng:126.866841, eLat:36.843883, eLng:126.866841},
+{zone:"C", type:"세로", col:5, part:"동쪽", count:50, startNo:5201, endNo:5250, sLat:36.845342, sLng:126.866886, eLat:36.843883, eLng:126.866886},
+{zone:"C", type:"세로", col:6, part:"서쪽", count:50, startNo:6101, endNo:6150, sLat:36.845342, sLng:126.867035, eLat:36.843883, eLng:126.867035},
+{zone:"C", type:"세로", col:6, part:"동쪽", count:50, startNo:6201, endNo:6250, sLat:36.845342, sLng:126.867081, eLat:36.843883, eLng:126.867081},
+{zone:"B", type:"세로", col:1, part:"서쪽", count:50, startNo:1101, endNo:1150, sLat:36.845342, sLng:126.867275, eLat:36.843883, eLng:126.867275},
+{zone:"B", type:"세로", col:1, part:"동쪽", count:50, startNo:1201, endNo:1250, sLat:36.845342, sLng:126.867321, eLat:36.843883, eLng:126.867321},
+{zone:"B", type:"세로", col:2, part:"서쪽", count:50, startNo:2101, endNo:2150, sLat:36.845342, sLng:126.867469, eLat:36.843883, eLng:126.867469},
+{zone:"B", type:"세로", col:2, part:"동쪽", count:50, startNo:2201, endNo:2250, sLat:36.845342, sLng:126.867515, eLat:36.843883, eLng:126.867515},
+{zone:"B", type:"세로", col:3, part:"서쪽", count:50, startNo:3101, endNo:3150, sLat:36.845342, sLng:126.867663, eLat:36.843883, eLng:126.867663},
+{zone:"B", type:"세로", col:3, part:"동쪽", count:50, startNo:3201, endNo:3250, sLat:36.845342, sLng:126.867709, eLat:36.843883, eLng:126.867709},
+{zone:"B", type:"세로", col:4, part:"서쪽", count:50, startNo:4101, endNo:4150, sLat:36.845342, sLng:126.867857, eLat:36.843883, eLng:126.867857},
+{zone:"B", type:"세로", col:4, part:"동쪽", count:50, startNo:4201, endNo:4250, sLat:36.845342, sLng:126.867902, eLat:36.843883, eLng:126.867902},
+{zone:"B", type:"세로", col:5, part:"서쪽", count:50, startNo:5101, endNo:5150, sLat:36.845342, sLng:126.868051, eLat:36.843883, eLng:126.868051},
+{zone:"B", type:"세로", col:5, part:"동쪽", count:50, startNo:5201, endNo:5250, sLat:36.845342, sLng:126.868096, eLat:36.843883, eLng:126.868096},
+{zone:"B", type:"세로", col:6, part:"서쪽", count:50, startNo:6101, endNo:6150, sLat:36.845342, sLng:126.868245, eLat:36.843883, eLng:126.868245},
+{zone:"B", type:"세로", col:6, part:"동쪽", count:50, startNo:6201, endNo:6250, sLat:36.845342, sLng:126.868291, eLat:36.843883, eLng:126.868291},
+{zone:"B", type:"세로", col:7, part:"서쪽", count:50, startNo:7101, endNo:7150, sLat:36.845342, sLng:126.868439, eLat:36.843883, eLng:126.868439},
+{zone:"B", type:"세로", col:7, part:"동쪽", count:50, startNo:7201, endNo:7250, sLat:36.845342, sLng:126.868484, eLat:36.843883, eLng:126.868484},
+{zone:"A", type:"세로", col:1, part:"서쪽", count:50, startNo:1101, endNo:1150, sLat:36.845342, sLng:126.868723, eLat:36.843883, eLng:126.868723},
+{zone:"A", type:"세로", col:1, part:"동쪽", count:50, startNo:1201, endNo:1250, sLat:36.845342, sLng:126.868768, eLat:36.843883, eLng:126.868768},
+{zone:"A", type:"세로", col:2, part:"서쪽", count:50, startNo:2101, endNo:2150, sLat:36.845342, sLng:126.868917, eLat:36.843883, eLng:126.868917},
+{zone:"A", type:"세로", col:2, part:"동쪽", count:50, startNo:2201, endNo:2250, sLat:36.845342, sLng:126.868963, eLat:36.843883, eLng:126.868963},
+{zone:"A", type:"세로", col:3, part:"서쪽", count:50, startNo:3101, endNo:3150, sLat:36.845342, sLng:126.869111, eLat:36.843883, eLng:126.869111},
+{zone:"A", type:"세로", col:3, part:"동쪽", count:50, startNo:3201, endNo:3250, sLat:36.845342, sLng:126.869156, eLat:36.843883, eLng:126.869156},
+{zone:"A", type:"세로", col:4, part:"서쪽", count:50, startNo:4101, endNo:4150, sLat:36.845342, sLng:126.869304, eLat:36.843883, eLng:126.869304},
+{zone:"A", type:"세로", col:4, part:"동쪽", count:50, startNo:4201, endNo:4250, sLat:36.845342, sLng:126.86935, eLat:36.843883, eLng:126.86935},
+{zone:"A", type:"세로", col:5, part:"서쪽", count:50, startNo:5101, endNo:5150, sLat:36.845342, sLng:126.869498, eLat:36.843883, eLng:126.869498},
+{zone:"A", type:"세로", col:5, part:"동쪽", count:50, startNo:5201, endNo:5250, sLat:36.845342, sLng:126.869544, eLat:36.843883, eLng:126.869544},
+{zone:"A", type:"세로", col:6, part:"서쪽", count:50, startNo:6101, endNo:6150, sLat:36.845342, sLng:126.869692, eLat:36.843883, eLng:126.869692},
+{zone:"A", type:"세로", col:6, part:"동쪽", count:50, startNo:6201, endNo:6250, sLat:36.845342, sLng:126.869738, eLat:36.843883, eLng:126.869738},
+{zone:"K", type:"가로", col:1, part:"앞줄", count:68, startNo:1011, endNo:1681, sLat:36.846467, sLng:126.865932, eLat:36.846467, eLng:126.863948},
+{zone:"K", type:"가로", col:1, part:"뒷줄", count:69, startNo:1012, endNo:1692, sLat:36.846515, sLng:126.865941, eLat:36.846515, eLng:126.863927},
+{zone:"K", type:"가로", col:2, part:"앞줄", count:68, startNo:2011, endNo:2681, sLat:36.846622, sLng:126.865932, eLat:36.846622, eLng:126.863948},
+{zone:"K", type:"가로", col:2, part:"뒷줄", count:69, startNo:2012, endNo:2692, sLat:36.84667, sLng:126.865941, eLat:36.84667, eLng:126.863927},
 {zone:"K", type:"가로", col:3, part:"앞줄", count:68, startNo:3011, endNo:3681, sLat:36.846777, sLng:126.865932, eLat:36.846777, eLng:126.863948},
 {zone:"K", type:"가로", col:3, part:"뒷줄", count:69, startNo:3012, endNo:3692, sLat:36.846829, sLng:126.865941, eLat:36.846829, eLng:126.863927},
 {zone:"K", type:"가로", col:4, part:"앞줄", count:68, startNo:4011, endNo:4681, sLat:36.846933, sLng:126.865932, eLat:36.846933, eLng:126.863948},
@@ -561,34 +432,34 @@ var locationDB = [
 {zone:"HB", type:"가로", col:2, part:"앞줄2", count:5, startNo:2351, endNo:2391, sLat:36.84883, sLng:126.868307, eLat:36.84883, eLng:126.868162},
 {zone:"HB", type:"가로", col:2, part:"뒷줄1", count:34, startNo:2012, endNo:2342, sLat:36.848879, sLng:126.86934, eLat:36.848879, eLng:126.868379},
 {zone:"HB", type:"가로", col:2, part:"뒷줄2", count:5, startNo:2352, endNo:2392, sLat:36.848879, sLng:126.868307, eLat:36.848879, eLng:126.868162},
-{zone:"HB", type:"가로", col:3, part:"앞줄1", count:34, startNo:2011, endNo:2341, sLat:36.848973, sLng:126.86934, eLat:36.848973, eLng:126.868379},
-{zone:"HB", type:"가로", col:3, part:"앞줄2", count:5, startNo:2351, endNo:2391, sLat:36.848973, sLng:126.868307, eLat:36.848973, eLng:126.868162},
-{zone:"HB", type:"가로", col:3, part:"뒷줄1", count:34, startNo:2012, endNo:2342, sLat:36.849025, sLng:126.86934, eLat:36.849025, eLng:126.868379},
-{zone:"HB", type:"가로", col:3, part:"뒷줄2", count:5, startNo:2352, endNo:2392, sLat:36.849025, sLng:126.868307, eLat:36.849025, eLng:126.868162},
-{zone:"HB", type:"가로", col:4, part:"앞줄1", count:34, startNo:2011, endNo:2341, sLat:36.849141, sLng:126.86934, eLat:36.849141, eLng:126.868379},
-{zone:"HB", type:"가로", col:4, part:"앞줄2", count:5, startNo:2351, endNo:2391, sLat:36.849141, sLng:126.868307, eLat:36.849141, eLng:126.868162},
-{zone:"HB", type:"가로", col:4, part:"뒷줄1", count:34, startNo:2012, endNo:2342, sLat:36.849194, sLng:126.86934, eLat:36.849194, eLng:126.868379},
-{zone:"HB", type:"가로", col:4, part:"뒷줄2", count:5, startNo:2352, endNo:2392, sLat:36.849194, sLng:126.868307, eLat:36.849194, eLng:126.868162},
-{zone:"HB", type:"가로", col:5, part:"앞줄1", count:34, startNo:2011, endNo:2341, sLat:36.849291, sLng:126.86934, eLat:36.849291, eLng:126.868379},
-{zone:"HB", type:"가로", col:5, part:"앞줄2", count:5, startNo:2351, endNo:2391, sLat:36.849291, sLng:126.868307, eLat:36.849291, eLng:126.868162},
-{zone:"HB", type:"가로", col:5, part:"뒷줄1", count:34, startNo:2012, endNo:2342, sLat:36.849353, sLng:126.86934, eLat:36.849353, eLng:126.868379},
-{zone:"HB", type:"가로", col:5, part:"뒷줄2", count:5, startNo:2352, endNo:2392, sLat:36.849353, sLng:126.868307, eLat:36.849353, eLng:126.868162},
-{zone:"HB", type:"가로", col:6, part:"앞줄1", count:34, startNo:2011, endNo:2341, sLat:36.849448, sLng:126.86934, eLat:36.849448, eLng:126.868379},
-{zone:"HB", type:"가로", col:6, part:"앞줄2", count:5, startNo:2351, endNo:2391, sLat:36.849448, sLng:126.868307, eLat:36.849448, eLng:126.868162},
-{zone:"HB", type:"가로", col:6, part:"뒷줄1", count:34, startNo:2012, endNo:2342, sLat:36.849497, sLng:126.86934, eLat:36.849497, eLng:126.868379},
-{zone:"HB", type:"가로", col:6, part:"뒷줄2", count:5, startNo:2352, endNo:2392, sLat:36.849497, sLng:126.868307, eLat:36.849497, eLng:126.868162},
-{zone:"HB", type:"가로", col:7, part:"앞줄1", count:34, startNo:2011, endNo:2341, sLat:36.8496, sLng:126.86934, eLat:36.8496, eLng:126.868379},
-{zone:"HB", type:"가로", col:7, part:"앞줄2", count:5, startNo:2351, endNo:2391, sLat:36.8496, sLng:126.868307, eLat:36.8496, eLng:126.868162},
-{zone:"HB", type:"가로", col:7, part:"뒷줄1", count:34, startNo:2012, endNo:2342, sLat:36.849647, sLng:126.86934, eLat:36.849647, eLng:126.868379},
-{zone:"HB", type:"가로", col:7, part:"뒷줄2", count:5, startNo:2352, endNo:2392, sLat:36.849647, sLng:126.868307, eLat:36.849647, eLng:126.868162},
-{zone:"HB", type:"가로", col:8, part:"앞줄1", count:34, startNo:2011, endNo:2341, sLat:36.849748, sLng:126.86934, eLat:36.849748, eLng:126.868379},
-{zone:"HB", type:"가로", col:8, part:"앞줄2", count:5, startNo:2351, endNo:2391, sLat:36.849748, sLng:126.868307, eLat:36.849748, eLng:126.868162},
-{zone:"HB", type:"가로", col:8, part:"뒷줄1", count:34, startNo:2012, endNo:2342, sLat:36.849802, sLng:126.86934, eLat:36.849802, eLng:126.868379},
-{zone:"HB", type:"가로", col:8, part:"뒷줄2", count:5, startNo:2352, endNo:2392, sLat:36.849802, sLng:126.868307, eLat:36.849802, eLng:126.868162},
-{zone:"HB", type:"가로", col:9, part:"앞줄1", count:34, startNo:2011, endNo:2341, sLat:36.849903, sLng:126.86934, eLat:36.849903, eLng:126.868379},
-{zone:"HB", type:"가로", col:9, part:"앞줄2", count:5, startNo:2351, endNo:2391, sLat:36.849903, sLng:126.868307, eLat:36.849903, eLng:126.868162},
-{zone:"HB", type:"가로", col:9, part:"뒷줄1", count:34, startNo:2012, endNo:2342, sLat:36.849954, sLng:126.86934, eLat:36.849954, eLng:126.868379},
-{zone:"HB", type:"가로", col:9, part:"뒷줄2", count:5, startNo:2352, endNo:2392, sLat:36.849954, sLng:126.868307, eLat:36.849954, eLng:126.868162},
+{zone:"HB", type:"가로", col:3, part:"앞줄1", count:34, startNo:3011, endNo:3341, sLat:36.848973, sLng:126.86934, eLat:36.848973, eLng:126.868379},
+{zone:"HB", type:"가로", col:3, part:"앞줄2", count:5, startNo:3351, endNo:3391, sLat:36.848973, sLng:126.868307, eLat:36.848973, eLng:126.868162},
+{zone:"HB", type:"가로", col:3, part:"뒷줄1", count:34, startNo:3012, endNo:3342, sLat:36.849025, sLng:126.86934, eLat:36.849025, eLng:126.868379},
+{zone:"HB", type:"가로", col:3, part:"뒷줄2", count:5, startNo:3352, endNo:3392, sLat:36.849025, sLng:126.868307, eLat:36.849025, eLng:126.868162},
+{zone:"HB", type:"가로", col:4, part:"앞줄1", count:34, startNo:4011, endNo:4341, sLat:36.849141, sLng:126.86934, eLat:36.849141, eLng:126.868379},
+{zone:"HB", type:"가로", col:4, part:"앞줄2", count:5, startNo:4351, endNo:4391, sLat:36.849141, sLng:126.868307, eLat:36.849141, eLng:126.868162},
+{zone:"HB", type:"가로", col:4, part:"뒷줄1", count:34, startNo:4012, endNo:4342, sLat:36.849194, sLng:126.86934, eLat:36.849194, eLng:126.868379},
+{zone:"HB", type:"가로", col:4, part:"뒷줄2", count:5, startNo:4352, endNo:4392, sLat:36.849194, sLng:126.868307, eLat:36.849194, eLng:126.868162},
+{zone:"HB", type:"가로", col:5, part:"앞줄1", count:34, startNo:5011, endNo:5341, sLat:36.849291, sLng:126.86934, eLat:36.849291, eLng:126.868379},
+{zone:"HB", type:"가로", col:5, part:"앞줄2", count:5, startNo:5351, endNo:5391, sLat:36.849291, sLng:126.868307, eLat:36.849291, eLng:126.868162},
+{zone:"HB", type:"가로", col:5, part:"뒷줄1", count:34, startNo:5012, endNo:5342, sLat:36.849353, sLng:126.86934, eLat:36.849353, eLng:126.868379},
+{zone:"HB", type:"가로", col:5, part:"뒷줄2", count:5, startNo:5352, endNo:5392, sLat:36.849353, sLng:126.868307, eLat:36.849353, eLng:126.868162},
+{zone:"HB", type:"가로", col:6, part:"앞줄1", count:34, startNo:6011, endNo:6341, sLat:36.849448, sLng:126.86934, eLat:36.849448, eLng:126.868379},
+{zone:"HB", type:"가로", col:6, part:"앞줄2", count:5, startNo:6351, endNo:6391, sLat:36.849448, sLng:126.868307, eLat:36.849448, eLng:126.868162},
+{zone:"HB", type:"가로", col:6, part:"뒷줄1", count:34, startNo:6012, endNo:6342, sLat:36.849497, sLng:126.86934, eLat:36.849497, eLng:126.868379},
+{zone:"HB", type:"가로", col:6, part:"뒷줄2", count:5, startNo:6352, endNo:6392, sLat:36.849497, sLng:126.868307, eLat:36.849497, eLng:126.868162},
+{zone:"HB", type:"가로", col:7, part:"앞줄1", count:34, startNo:7011, endNo:7341, sLat:36.8496, sLng:126.86934, eLat:36.8496, eLng:126.868379},
+{zone:"HB", type:"가로", col:7, part:"앞줄2", count:5, startNo:7351, endNo:7391, sLat:36.8496, sLng:126.868307, eLat:36.8496, eLng:126.868162},
+{zone:"HB", type:"가로", col:7, part:"뒷줄1", count:34, startNo:7012, endNo:7342, sLat:36.849647, sLng:126.86934, eLat:36.849647, eLng:126.868379},
+{zone:"HB", type:"가로", col:7, part:"뒷줄2", count:5, startNo:7352, endNo:7392, sLat:36.849647, sLng:126.868307, eLat:36.849647, eLng:126.868162},
+{zone:"HB", type:"가로", col:8, part:"앞줄1", count:34, startNo:8011, endNo:8341, sLat:36.849748, sLng:126.86934, eLat:36.849748, eLng:126.868379},
+{zone:"HB", type:"가로", col:8, part:"앞줄2", count:5, startNo:8351, endNo:8391, sLat:36.849748, sLng:126.868307, eLat:36.849748, eLng:126.868162},
+{zone:"HB", type:"가로", col:8, part:"뒷줄1", count:34, startNo:8012, endNo:8342, sLat:36.849802, sLng:126.86934, eLat:36.849802, eLng:126.868379},
+{zone:"HB", type:"가로", col:8, part:"뒷줄2", count:5, startNo:8352, endNo:8392, sLat:36.849802, sLng:126.868307, eLat:36.849802, eLng:126.868162},
+{zone:"HB", type:"가로", col:9, part:"앞줄1", count:34, startNo:9011, endNo:9341, sLat:36.849903, sLng:126.86934, eLat:36.849903, eLng:126.868379},
+{zone:"HB", type:"가로", col:9, part:"앞줄2", count:5, startNo:9351, endNo:9391, sLat:36.849903, sLng:126.868307, eLat:36.849903, eLng:126.868162},
+{zone:"HB", type:"가로", col:9, part:"뒷줄1", count:34, startNo:9012, endNo:9342, sLat:36.849954, sLng:126.86934, eLat:36.849954, eLng:126.868379},
+{zone:"HB", type:"가로", col:9, part:"뒷줄2", count:5, startNo:9352, endNo:9392, sLat:36.849954, sLng:126.868307, eLat:36.849954, eLng:126.868162},
 {zone:"HB", type:"가로", col:10, part:"앞줄", count:36, startNo:11, endNo:341, sLat:36.850077, sLng:126.869336, eLat:36.850077, eLng:126.868239},
 {zone:"P", type:"가로", col:1, part:"앞줄", count:30, startNo:1011, endNo:1301, sLat:36.852041, sLng:126.861285, eLat:36.852041, eLng:126.860403},
 {zone:"P", type:"가로", col:1, part:"뒷줄", count:30, startNo:1012, endNo:1302, sLat:36.852088, sLng:126.861285, eLat:36.852088, eLng:126.860403},
@@ -623,11 +494,12 @@ var remainder = clean.substring(zone.length);
 if (remainder.length !== 4) return null;
 
 var col = parseInt(remainder.charAt(0), 10);
+// HB 구역 10열은 로케이션 표기가 HB0xxx로 시작함
 if (zone === 'HB' && col === 0) {
 col = 10;
 }
-var targetNum = parseInt(remainder.substring(1), 10);
 
+// 세로형 구역 (Y, C, B, A): [열(1)][동서구분(1)][순서(2)]
 if (zone === 'Y' || zone === 'C' || zone === 'B' || zone === 'A') {
 var sideChar = remainder.charAt(1);
 var subNum = parseInt(remainder.substring(2), 10);
@@ -650,6 +522,7 @@ return new naver.maps.LatLng(targetLat, targetLng);
 }
 }
 }
+// 가로형 구역 (H, HA, HB, K, KA, R, RA, I, IA, J, JA, P, PA): [열(1)][순서(2)][앞뒤구분(1)]
 else {
 var seqNum = parseInt(remainder.substring(1, 3), 10);
 var lineChar = remainder.charAt(3);
@@ -680,7 +553,7 @@ window.closeGuide();
 var rawInput = document.getElementById('search-input').value.trim();
 var targetCoord = parseLocation(rawInput);
 if (!targetCoord) {
-alert("올바르지 않은 형식입니다: " + rawInput + "\n(입력 예시: Y1101, B7101, HX3152 등)");
+alert("올바르지 않은 형식입니다: " + rawInput + "\n(입력 예시: Y1101, B7101, HB3152 등)");
 return;
 }
 window.activeTarget = targetCoord;
