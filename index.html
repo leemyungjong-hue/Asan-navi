@@ -88,7 +88,7 @@ display: flex; align-items: center; justify-content: center;
 </div>
 
 <div id="search-box">
-<input type="text" id="search-input" placeholder="검색 예: Y1101, HB3302, HX3152" oninput="this.value = this.value.toUpperCase()">
+<input type="text" id="search-input" placeholder="검색 예: Y1101, HB3302, JA4302" oninput="this.value = this.value.toUpperCase()">
 <button id="search-btn" onclick="searchLocation()">로케이션 검색</button>
 </div>
 
@@ -128,9 +128,8 @@ var overlay = document.getElementById('welcome-guide-overlay');
 if (overlay) overlay.style.display = 'none';
 };
 
-// 하버사인 공식 직선거리 계산 (미터 단위)
 function getDistance(lat1, lon1, lat2, lon2) {
-var R = 6371e3; // 지구 반경 (m)
+var R = 6371e3;
 var dLat = (lat2 - lat1) * Math.PI / 180;
 var dLon = (lon2 - lon1) * Math.PI / 180;
 var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -645,8 +644,6 @@ zone = clean.substring(0, 2);
 }
 
 var remainder = clean.substring(zone.length);
-
-// 가로형 구역에서 10열(두 자리 컬럼) 예외 처리 로직 보완
 var col = 0;
 var seqNum = 0;
 var lineChar = '';
@@ -676,7 +673,6 @@ return new naver.maps.LatLng(targetLat, targetLng);
 }
 }
 else {
-// 가로형 구역 (HB3302 등 두 자리 컬럼 및 4~5자리 입력 대응)
 if (zone === 'HB' && remainder.startsWith('10')) {
 col = 10;
 seqNum = parseInt(remainder.substring(2, 4), 10);
@@ -692,8 +688,18 @@ return null;
 for (var i = 0; i < locationDB.length; i++) {
 var db = locationDB[i];
 if (db.zone === zone && db.col === col) {
-var matchLine = (db.part.includes('앞') && lineChar === '1') || (db.part.includes('뒤') && lineChar === '2') || (db.part === '');
-if (matchLine || db.part === '앞줄' || db.part === '뒷줄') {
+// [수정된 매칭 로직]: db.part에 '앞'이 포함되면서 lineChar가 '1'이거나, 혹은 db.part에 '뒤'가 포함되면서 lineChar가 '2'인 경우를 유연하게 판단
+var isFrontQuery = (lineChar === '1');
+var isRearQuery = (lineChar === '2');
+var dbIsFront = db.part.includes('앞');
+var dbIsRear = db.part.includes('뒤');
+
+var matchLine = false;
+if (dbIsFront && isFrontQuery) matchLine = true;
+if (dbIsRear && isRearQuery) matchLine = true;
+if (!dbIsFront && !dbIsRear) matchLine = true; // 단순 '앞줄' / '뒷줄' 또는 파트 구분 없는 경우
+
+if (matchLine) {
 var minNo = Math.floor((db.startNo % 1000) / 10);
 var maxNo = Math.floor((db.endNo % 1000) / 10);
 if (seqNum >= minNo && seqNum <= maxNo) {
@@ -715,7 +721,7 @@ window.closeGuide();
 var rawInput = document.getElementById('search-input').value.trim();
 var targetCoord = parseLocation(rawInput);
 if (!targetCoord) {
-alert("올바르지 않은 형식입니다: " + rawInput + "\n(입력 예시: Y1101, HB3302, HX3152 등)");
+alert("올바르지 않은 형식입니다: " + rawInput + "\n(입력 예시: Y1101, HB3302, JA4302 등)");
 return;
 }
 window.activeTarget = targetCoord;
